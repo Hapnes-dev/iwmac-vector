@@ -12,7 +12,7 @@ userscript:
 
 | Path | What |
 |---|---|
-| `app/` | `vectorcraft-web-0.10.0.zip` from the [v0.10.0 release](https://github.com/storytold/vectorcraft/releases/tag/v0.10.0), **unpacked and unmodified** — the page, its loader, the 62 MB `.wasm`, the bundled fallback fonts, and the licence files |
+| `app/` | `vectorcraft-web-0.11.0.zip` from the [v0.11.0 release](https://github.com/storytold/vectorcraft/releases/tag/v0.11.0), **unpacked and unmodified** — the page, its loader, the 62 MB `.wasm`, the bundled fallback fonts, and the licence files |
 | `index.html` | A short landing page with the attribution |
 | `.nojekyll` | Serve every file as it is (Pages would otherwise skip `_headers`) |
 | `.github/workflows/update-vectorcraft.yml` | Run by hand to replace `app/` with another release |

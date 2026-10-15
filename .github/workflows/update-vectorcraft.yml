@@ -31,13 +31,14 @@ jobs:
           test -f "$SRC/index.html"
           rm -rf app && mkdir app && cp -r "$SRC/." app/
           sed -i "s/VectorCraft [0-9][0-9.]*/VectorCraft ${VERSION}/" index.html
+          sed -i -E "s/(vectorcraft-web-|releases\/tag\/v|\[v)[0-9]+\.[0-9]+\.[0-9]+/\1${VERSION}/g" README.md
       - name: Commit
         env:
           TAG: ${{ inputs.tag }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A app index.html
+          git add -A app index.html README.md
           git diff --cached --quiet && echo "nothing changed" && exit 0
           git commit -m "VectorCraft ${TAG}: official web build, unmodified"
           git push
