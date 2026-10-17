@@ -46,6 +46,7 @@ jobs:
         with:
           name: app-${{ inputs.tag }}
           path: app
+          include-hidden-files: true
       - name: Commit
         if: ${{ inputs.commit }}
         env:
