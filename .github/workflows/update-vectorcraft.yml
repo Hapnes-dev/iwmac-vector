@@ -40,6 +40,9 @@ jobs:
           VERSION="${TAG#v}"
           sed -i "s/VectorCraft [0-9][0-9.]*[0-9], an open-source/VectorCraft ${VERSION}, an open-source/" index.html
           sed -i -E "s/^Currently: VectorCraft [0-9.]+[0-9]\./Currently: VectorCraft ${VERSION}./" README.md
+      - name: Check
+        # SIMD in, the ArtCraft name only in the attribution, the page's integrity right (UPDATING.md, step 3)
+        run: python3 build/check.py app
       - name: Upload to try
         if: ${{ !inputs.commit }}
         uses: actions/upload-artifact@v4

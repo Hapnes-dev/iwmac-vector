@@ -47,31 +47,26 @@ release pins, as in the official build, and the licence files and notices come f
 | Path | What |
 |---|---|
 | `app/` | The editor: the page, its loader, the `.wasm`, the fallback fonts, and the official web zip's licence files and notices |
+| `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
 | `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, builds with SIMD and craft-fonts, adds the official zip's licence files |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
+| `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version |
+| `build/bench-drawing.py` | Writes a made-up drawing shaped like an IWMAC panel, to time drags in two builds |
 | `index.html` | A short landing page with the attribution |
 | `.nojekyll` | Serve every file as it is (Pages would otherwise skip `_headers`) |
 | `.github/workflows/update-vectorcraft.yml` | Run by hand: `build/build.sh` on GitHub's runner for a release tag, then a commit of `app/` |
 
 ## Updating VectorCraft
 
-Actions → *Update VectorCraft* → *Run workflow*, with a release tag (for example `v0.12.0`):
-- With **commit** unticked, the build is uploaded as an artifact to try.
-- With it ticked, it replaces `app/` and commits.
+Follow **[UPDATING.md](UPDATING.md)**. In short:
+1. Run Actions › *Update VectorCraft* with the release tag and **commit** unticked, to build it to try.
+2. Check the artifact with `build/check.py`, look at it, and time it.
+3. Test the userscript on it.
+4. Run the workflow again with **commit** ticked.
 
-By hand, in Linux or WSL with a Rust toolchain, the `wasm32-unknown-unknown` target and trunk:
-
-```bash
-build/build.sh v0.12.0
-```
-
-Test the bridge before relying on a new version. It assumes three things:
-- the editor opens a file dropped on its canvas;
-- it saves through a blob download;
-- its Save As dialog takes the keys the userscript sends.
-
-VectorCraft 0.12.0 changed that dialog. Version 1.82.4 of the userscript then falls back to clicks, which work
-but are slower, so update the userscript before moving to 0.12.0.
+The userscript drives VectorCraft from outside. It drops files, answers Save As by keys, and catches the saved
+download. A release can break that without breaking anything else. VectorCraft 0.12.0 changed its Save As dialog,
+so the userscript needs a change before the site moves to 0.12.0 (UPDATING.md, step 5).
 
 ## Licences
 
