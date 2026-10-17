@@ -1,0 +1,6 @@
+# The build scripts run under Linux and WSL: keep them LF in every checkout, Windows included
+*.sh text eol=lf
+*.py text eol=lf
+# The editor's files byte for byte: its page names the loader and the wasm by their SHA-384 (integrity), so a line
+# ending converted in any checkout or archive would stop the editor from loading
+app/** -text

@@ -1,13 +1,18 @@
 name: Update VectorCraft
 
-# Run by hand: replaces app/ with the official web build of another VectorCraft release,
-# unpacked and unmodified, and commits it. Pages then serves the new version.
+# Run by hand: builds VectorCraft from a release tag's official source, with WebAssembly SIMD and without the
+# ArtCraft name (build/build.sh). With "commit" ticked it replaces app/ and commits it, and Pages then serves the
+# new version; unticked, the build is only uploaded as an artifact, to try first.
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, for example v0.10.0"
+        description: "Release tag, for example v0.12.0"
         required: true
+      commit:
+        description: "Replace app/ and commit (untick to only build it and upload it to try)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -15,24 +20,34 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - name: Download the web build
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+          curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C "$HOME/.cargo/bin"
+          rustc --version
+          trunk --version
+      - name: Build
         env:
-          GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
+          bash build/build.sh "$TAG" "$RUNNER_TEMP/vc"
           VERSION="${TAG#v}"
-          gh release download "$TAG" -R storytold/vectorcraft -p "vectorcraft-web-${VERSION}.zip" -D /tmp/vc
-          rm -rf /tmp/vc/out && mkdir -p /tmp/vc/out
-          unzip -q "/tmp/vc/vectorcraft-web-${VERSION}.zip" -d /tmp/vc/out
-          SRC="/tmp/vc/out/vectorcraft-web-${VERSION}"
-          test -f "$SRC/index.html"
-          rm -rf app && mkdir app && cp -r "$SRC/." app/
-          sed -i "s/VectorCraft [0-9][0-9.]*/VectorCraft ${VERSION}/" index.html
-          sed -i -E "s/(vectorcraft-web-|releases\/tag\/v|\[v)[0-9]+\.[0-9]+\.[0-9]+/\1${VERSION}/g" README.md
+          sed -i "s/VectorCraft [0-9][0-9.]*[0-9], an open-source/VectorCraft ${VERSION}, an open-source/" index.html
+          sed -i -E "s/^Currently: VectorCraft [0-9.]+[0-9]\./Currently: VectorCraft ${VERSION}./" README.md
+      - name: Upload to try
+        if: ${{ !inputs.commit }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ inputs.tag }}
+          path: app
       - name: Commit
+        if: ${{ inputs.commit }}
         env:
           TAG: ${{ inputs.tag }}
         run: |
@@ -40,5 +55,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A app index.html README.md
           git diff --cached --quiet && echo "nothing changed" && exit 0
-          git commit -m "VectorCraft ${TAG}: official web build, unmodified"
+          git commit -m "VectorCraft ${TAG}: built from the official source with WebAssembly SIMD, without the ArtCraft name"
           git push
