@@ -70,7 +70,7 @@ Every line must read PASS. The workflow runs the same check and fails if any lin
 | "ArtCraft" appears exactly once, in "Based on VectorCraft by the ArtCraft team" | The brand terms: a modified build carries no ArtCraft marks |
 | No ArtCraft links (getartcraft.com, discord.gg/artcraft) | The same |
 | The version string | That it is the release you meant |
-| The embedded UI font (BIZ UDPGothic) | Only a warning: craft-fonts' web set can change |
+| The embedded UI font (BIZ UDPGothic) | Only a warning: craft-fonts' web set can change, and from 0.13 the official web build embeds none |
 | `LICENSE-MIT` and `LICENSE-APACHE` present, VectorCraft's own `README.md` left out | Licences go with it; their README carries the brand |
 
 ## 4. Look at it and time it
@@ -112,7 +112,8 @@ These live outside this public repository. The kit repository (private) explains
 then compare it with the live build:
 - syncs that must place 80, 109 and 77 objects;
 - the .ai flow;
-- the first save, which must answer Save As by keys (`primeTaps` empty).
+- the first save, which must answer Save As by the clicks alone (the userscript answers by clicks first since
+  1.83.2).
 
 **By hand, right after going live** (5 minutes, in the live Designer, on a test panel):
 1. Open the panel in the IWMAC Designer and choose **Edit in VectorCraft**. The drawing and its objects open, and
@@ -137,7 +138,18 @@ as in 0.11.0) still works. Measured against 0.11.0, the first save was ready aft
 an .ai's sync took 8.2 s instead of 2.4 s.
 
 Change the userscript before moving to 0.12.0: in `answerSaveAs`, use the clicks first, or click OK once the keys
-have taken SVG.
+have taken SVG. The userscript does the clicks first since 1.83.2.
+
+### Known: VectorCraft 0.13.1, built and not published
+
+Tried on 2026-10-18. The build and `check.py` passed, and so did the userscript's syncs and its first save by the
+clicks (in 0.13.1 the keys take *VectorCraft Template*). It stayed unpublished for what it makes of an `.ai`:
+- A stroked zigzag in our test drawings opens as its bounding rectangle. The official 0.13.1 build does the same, byte
+  for byte, so it is the release, not this build.
+- The colours taken from an `.ai` move by up to 8 in a channel.
+
+Before the next release, open the same `.ai` files in it and in the live build, save both as SVG, and compare the
+paths.
 
 ## 6. Publish
 
@@ -215,9 +227,11 @@ rustup target add wasm32-unknown-unknown
 curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C ~/.cargo/bin
 ```
 
-`build/build.sh` does the rest. It clones the tag and runs `debrand.py`. It fetches craft-fonts at the commit the
-release's `release.yml` pins, and the official web zip for its licence files. Then it builds with
-`-C target-feature=+simd128` for the wasm target only. The work folder needs about 5 GB.
+`build/build.sh` does the rest. It clones the tag and runs `debrand.py`. It fetches the official web zip for its
+licence files. When that zip has a `fonts/` folder, it fetches craft-fonts at the commit the release's workflow pins
+and builds with them, as the official web build did up to 0.12.0. From 0.13 the release builds its web version
+without them, and so does this. Then it builds with `-C target-feature=+simd128` for the wasm target only. The work
+folder needs about 5 GB.
 
 Run `build.sh` from a WSL path or from `/mnt/c/...`. The scripts are kept LF by `.gitattributes`.
 

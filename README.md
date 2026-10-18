@@ -39,8 +39,9 @@ Two things differ from the official web release of the same version, and nothing
   Help › About says the build is based on VectorCraft by the ArtCraft team. The link to VectorCraft's source on
   GitHub stays.
 
-Everything else is the official source at the release tag. The fonts come from craft-fonts at the commit the
-release pins, as in the official build, and the licence files and notices come from the official web zip.
+Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
+at the commit the release pins up to 0.12.0, and from 0.13 none, as VectorCraft's own build picks. The licence files
+and notices come from the official web zip.
 
 ## What is here
 
@@ -48,7 +49,7 @@ release pins, as in the official build, and the licence files and notices come f
 |---|---|
 | `app/` | The editor: the page, its loader, the `.wasm`, the fallback fonts, and the official web zip's licence files and notices |
 | `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
-| `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, builds with SIMD and craft-fonts, adds the official zip's licence files |
+| `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
 | `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version |
 | `build/bench-drawing.py` | Writes a made-up drawing shaped like an IWMAC panel, to time drags in two builds |

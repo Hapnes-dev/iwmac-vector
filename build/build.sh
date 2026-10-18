@@ -18,16 +18,33 @@ rm -rf "$SRC"
 git clone -q --depth 1 --branch "$TAG" https://github.com/storytold/vectorcraft "$SRC"
 python3 "$HERE/debrand.py" "$SRC"
 
-# the fonts the official release embeds and serves: craft-fonts at the commit the tag's release workflow pins
-PIN="$(grep -A2 'repository: storytold/craft-fonts' "$SRC/.github/workflows/release.yml" | sed -n 's/.*ref: *\([0-9a-f]\{40\}\).*/\1/p' | head -1)"
-[ -n "$PIN" ] || { echo "no craft-fonts pin in the tag's release.yml" >&2; exit 1; }
-FONTS="$WORK/craft-fonts-$PIN"
-if [ ! -d "$FONTS" ]; then
-  git init -q "$FONTS"
-  git -C "$FONTS" fetch -q --depth 1 https://github.com/storytold/craft-fonts "$PIN"
-  git -C "$FONTS" checkout -q FETCH_HEAD
+# the official web zip: its licence files and notices go beside our build, and what it holds says how it was built
+rm -rf "$WORK/release" && mkdir -p "$WORK/release"
+curl -fsSL -o "$WORK/release/vectorcraft-web-${VERSION}.zip" \
+  "https://github.com/storytold/vectorcraft/releases/download/${TAG}/vectorcraft-web-${VERSION}.zip"
+python3 -m zipfile -e "$WORK/release/vectorcraft-web-${VERSION}.zip" "$WORK/release"
+OFFICIAL="$WORK/release/vectorcraft-web-${VERSION}"
+
+# the fonts, as the official web build has them. Up to 0.12.0 it embedded and served craft-fonts (a fonts/ folder
+# in its zip), at the commit the tag's release workflow pins with a checkout's ref. From 0.13 the shared release
+# workflow builds the web release without them unless the app asks (web-craft-fonts, pinned by craft-fonts-ref), and
+# the app's build.rs picks the fonts its web build embeds.
+unset CRAFT_FONTS_DIR CRAFT_FONTS_REQUIRED
+if [ -d "$OFFICIAL/fonts" ]; then
+  WF="$SRC/.github/workflows/release.yml"
+  PIN="$( { grep -A2 'repository: storytold/craft-fonts' "$WF"; grep 'craft-fonts-ref:' "$WF"; } | sed -n 's/.*ref: *\([0-9a-f]\{40\}\).*/\1/p' | head -1 || true)"
+  [ -n "$PIN" ] || { echo "the official web zip has fonts/, and the tag's release.yml pins no craft-fonts" >&2; exit 1; }
+  FONTS="$WORK/craft-fonts-$PIN"
+  if [ ! -d "$FONTS" ]; then
+    git init -q "$FONTS"
+    git -C "$FONTS" fetch -q --depth 1 https://github.com/storytold/craft-fonts "$PIN"
+    git -C "$FONTS" checkout -q FETCH_HEAD
+  fi
+  export CRAFT_FONTS_DIR="$FONTS" CRAFT_FONTS_REQUIRED=1
+  echo "craft-fonts $PIN, as the official web build"
+else
+  echo "no craft-fonts: the official web build has none"
 fi
-export CRAFT_FONTS_DIR="$FONTS" CRAFT_FONTS_REQUIRED=1
 
 cd "$SRC/apps/vectorcraft-web"
 export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-C target-feature=+simd128"
@@ -36,11 +53,6 @@ rm -rf "$WORK/dist-site"
 trunk build --release --dist "$WORK/dist-site"
 
 # the official package around it: its licence files and notices, our build's page, loader and wasm
-rm -rf "$WORK/release" && mkdir -p "$WORK/release"
-curl -fsSL -o "$WORK/release/vectorcraft-web-${VERSION}.zip" \
-  "https://github.com/storytold/vectorcraft/releases/download/${TAG}/vectorcraft-web-${VERSION}.zip"
-python3 -m zipfile -e "$WORK/release/vectorcraft-web-${VERSION}.zip" "$WORK/release"
-OFFICIAL="$WORK/release/vectorcraft-web-${VERSION}"
 rm -rf "$REPO/app" && mkdir "$REPO/app"
 cp -r "$OFFICIAL/." "$REPO/app/"
 rm -f "$REPO/app/index.html" "$REPO/app/"vectorcraft-web-*.js "$REPO/app/"vectorcraft-web-*_bg.wasm "$REPO/app/README.md"
