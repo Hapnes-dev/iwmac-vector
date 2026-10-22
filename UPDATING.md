@@ -38,6 +38,10 @@ Look for changes to what the userscript relies on:
 Look also for changes to the parts `build/debrand.py` edits: the Help menu, the About box, the Discord button and
 the community links.
 
+And look whether each fix in `build/patches/` is in the release yet: the head of each patch says where it comes
+from. `build.sh` says so too, and a patch that is in can go (see
+[Fixes taken ahead of a release](#fixes-taken-ahead-of-a-release)).
+
 ## 2. Build it to try
 
 **On GitHub.** Go to Actions › *Update VectorCraft* › *Run workflow*. Enter the tag, untick **commit**, and run. It
@@ -110,7 +114,7 @@ answers Save As, and catches the saved SVG. A VectorCraft release can break that
 These live outside this public repository. The kit repository (private) explains them in
 `iwmac-designer-import-export/VECTORCRAFT-UPDATE.md`. They serve the build you are trying at this site's address,
 then compare it with the live build:
-- syncs that must place 80, 109 and 77 objects;
+- syncs that must place as many objects as on the live build;
 - the .ai flow;
 - the first save, which must answer Save As by the clicks alone (the userscript answers by clicks first since
   1.83.2).
@@ -151,6 +155,24 @@ clicks (in 0.13.1 the keys take *VectorCraft Template*). It stayed unpublished f
 Before the next release, open the same `.ai` files in it and in the live build, save both as SVG, and compare the
 paths.
 
+### Known: VectorCraft 0.14.0, published with one fix taken ahead
+
+Built, tested and published on 2026-10-22.
+- **The heat exchanger.** The release still opens the stroked zigzag as its bounding rectangle, as 0.12.0 and 0.13.1
+  did, and so does its official build. The fix is upstream in craft-libs, not merged yet, so this build takes it
+  from `build/patches/` (see [Fixes taken ahead of a release](#fixes-taken-ahead-of-a-release)). With it, every shape
+  of the test `.ai` files (2349's, 3530's and 2313's Maskin, 2313's VGV, the Maskin template) opens as in 0.11.0.
+- **Colours from an `.ai`** still move by up to 8 in a channel, as in 0.13.1: from 0.12 VectorCraft converts CMYK
+  through colour management. Illustrator's own export of the same drawing is a little nearer 0.11.0's colours. Shown
+  here, not changed.
+- **Fonts.** The official web zip carries craft-fonts again (with Noto Sans Georgian), so this build does too, at the
+  commit the release workflow names.
+- **The userscript (1.100.0):** its syncs placed as many objects as on 0.11.0, the `.ai` flow gave the same results,
+  and the first save was answered by the clicks alone, ready after 11.5 s (11.9 s on 0.11.0). A component dragged
+  onto the drawing lands about 2 px from where 0.11.0 put it.
+- **Speed:** a drag frame on 10214's Maskin at 1400 x 900 drew in 5.9 to 8.1 ms, against 5.3 to 8.9 ms in 0.11.0 and
+  14.8 to 19.3 ms in the official 0.14.0 build.
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,
@@ -188,6 +210,29 @@ git push
 
 Pages serves the previous build a minute later. The editor keeps documents per browser, so they survive a
 rollback, unless the new version changed its file format. Read the release notes for that.
+
+## Fixes taken ahead of a release
+
+When a release breaks something the userscript's drawings need, and a fix exists upstream but is not released, the
+fix can go in `build/patches/` until a release has it. Since 0.14.0 there is one: the PDF reader painted a stroked
+polyline whose points reach every corner of its bounding box (an `.ai`'s heat exchanger zigzag) as that box.
+
+- **One patch per file**, named `<crate>--<what>.patch`, for one vendored crate of storytold/craft-libs, with
+  craft-libs' paths (`vendor/<crate>/…`). Text before the first `diff --git` line is ignored: say there where the
+  fix comes from (the pull request and its head commit) and when to remove it.
+- **How it is applied.** `build.sh` reads the commit the tag's `Cargo.toml` pins for that crate in
+  `[patch.crates-io]`, copies `vendor/<crate>` from craft-libs at that commit, applies the patch to the copy, and
+  points that one line at the copy. Everything else stays on the pinned commit.
+- **When the release has the fix**, `build.sh` says *already in craft-libs …: not applied, remove it*. Delete the
+  patch, and say so in the README's *How this build differs*.
+
+### When a patch stops
+
+`build.sh` stops with *… fits neither craft-libs … nor its patched copy* when the pinned commit changed the code
+the patch edits, and with *… has no single craft-libs line for …* when the tag no longer takes the crate from
+craft-libs that way. Look whether the fix went in upstream in another form: open the `.ai` files with
+`context/vc013/ai-ab.js` (the private runbook) in an official build. If it did, delete the patch. If not, take the
+fix's current version from upstream, or rewrite the patch against the new commit, and build again.
 
 ## When debrand.py stops
 

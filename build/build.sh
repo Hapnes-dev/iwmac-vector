@@ -18,6 +18,40 @@ rm -rf "$SRC"
 git clone -q --depth 1 --branch "$TAG" https://github.com/storytold/vectorcraft "$SRC"
 python3 "$HERE/debrand.py" "$SRC"
 
+# fixes taken ahead of a release: build/patches/<crate>--<what>.patch, in craft-libs' paths. The vendored crate is
+# copied from craft-libs at the commit the tag's [patch.crates-io] pins, the patch applied to the copy, and that one
+# line pointed at the copy. A patch the pinned commit already has is skipped; one that fits neither way stops the build.
+rm -rf "$WORK/patched" && mkdir -p "$WORK/patched"
+for P in "$HERE"/patches/*.patch; do
+  [ -e "$P" ] || continue
+  NAME="$(basename "$P")"
+  CRATE="${NAME%%--*}"
+  if grep -E '^(---|\+\+\+) ' "$P" | grep -vE "^(---|\+\+\+) [ab]/vendor/$CRATE/" | grep -q .; then
+    echo "$NAME changes files outside vendor/$CRATE" >&2; exit 1
+  fi
+  RE="^$CRATE = \{ git = \"https://github.com/storytold/craft-libs\", rev = \"([0-9a-f]{40})\" \}$"
+  [ "$(grep -cE "$RE" "$SRC/Cargo.toml" || true)" = 1 ] \
+    || { echo "$NAME: the tag's Cargo.toml has no single craft-libs line for $CRATE" >&2; exit 1; }
+  REV="$(grep -E "$RE" "$SRC/Cargo.toml" | sed -E "s#$RE#\1#")"
+  LIBS="$WORK/craft-libs-$REV"
+  if [ ! -d "$LIBS" ]; then
+    git init -q "$LIBS"
+    git -C "$LIBS" fetch -q --depth 1 https://github.com/storytold/craft-libs "$REV"
+    git -C "$LIBS" checkout -q FETCH_HEAD
+  fi
+  COPY="$WORK/patched/$CRATE"
+  [ -d "$COPY" ] || cp -r "$LIBS/vendor/$CRATE" "$COPY"
+  if (cd "$COPY" && git apply -p3 --check "$P" 2>/dev/null); then
+    (cd "$COPY" && git apply -p3 "$P")
+    sed -i -E "s#$RE#$CRATE = { path = \"$COPY\" }#" "$SRC/Cargo.toml"
+    echo "patched $CRATE (craft-libs $REV): $NAME"
+  elif (cd "$COPY" && git apply -p3 -R --check "$P" 2>/dev/null); then
+    echo "$NAME is already in craft-libs $REV: not applied, remove it"
+  else
+    echo "$NAME fits neither craft-libs $REV nor its patched copy (UPDATING.md, When a patch stops)" >&2; exit 1
+  fi
+done
+
 # the official web zip: its licence files and notices go beside our build, and what it holds says how it was built
 rm -rf "$WORK/release" && mkdir -p "$WORK/release"
 curl -fsSL -o "$WORK/release/vectorcraft-web-${VERSION}.zip" \

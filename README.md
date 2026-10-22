@@ -8,11 +8,11 @@ userscript:
 - **Editor:** https://hapnes-dev.github.io/iwmac-vector/app/
 - **This page:** https://hapnes-dev.github.io/iwmac-vector/
 
-Currently: VectorCraft 0.11.0.
+Currently: VectorCraft 0.14.0.
 
 ## How this build differs from the official web build
 
-Two things differ from the official web release of the same version, and nothing else.
+Three things differ from the official web release of the same version, and nothing else.
 
 - **WebAssembly SIMD is on.** The official web release is built without it: its wasm's `target_features` lack
   `simd128`, and the canvas renderer (vello_cpu) then runs its scalar fallback. This build adds
@@ -38,9 +38,15 @@ Two things differ from the official web release of the same version, and nothing
 
   Help › About says the build is based on VectorCraft by the ArtCraft team. The link to VectorCraft's source on
   GitHub stays.
+- **Fixes taken ahead of a release.** A fix that VectorCraft or its libraries have not released yet, when a release
+  breaks something the userscript's drawings need. Each is a patch in [`build/patches/`](build/patches/), with where
+  it comes from at its head. `build.sh` applies it to the library at the commit the release pins, and stops the
+  build when it no longer fits. Now one: since 0.12.0 the PDF reader opens a stroked polyline whose points reach
+  every corner of its bounding box, such as a heat exchanger's zigzag in an `.ai`, as that box.
 
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
-at the commit the release pins up to 0.12.0, and from 0.13 none, as VectorCraft's own build picks. The licence files
+at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in
+0.13. The licence files
 and notices come from the official web zip.
 
 ## What is here
@@ -49,7 +55,8 @@ and notices come from the official web zip.
 |---|---|
 | `app/` | The editor: the page, its loader, the `.wasm`, the fallback fonts, and the official web zip's licence files and notices |
 | `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
-| `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
+| `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, applies `build/patches/`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
+| `build/patches/` | Fixes taken ahead of a release, one patch per file, each to one vendored crate of craft-libs |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
 | `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version |
 | `build/bench-drawing.py` | Writes a made-up drawing shaped like an IWMAC panel, to time drags in two builds |
@@ -65,9 +72,9 @@ Follow **[UPDATING.md](UPDATING.md)**. In short:
 3. Test the userscript on it.
 4. Run the workflow again with **commit** ticked.
 
-The userscript drives VectorCraft from outside. It drops files, answers Save As by keys, and catches the saved
-download. A release can break that without breaking anything else. VectorCraft 0.12.0 changed its Save As dialog,
-so the userscript needs a change before the site moves to 0.12.0 (UPDATING.md, step 5).
+The userscript drives VectorCraft from outside. It drops files, answers Save As by clicks, and catches the saved
+download. A release can break that without breaking anything else, so test the userscript on a new build before it
+goes live (UPDATING.md, step 5).
 
 ## Licences
 

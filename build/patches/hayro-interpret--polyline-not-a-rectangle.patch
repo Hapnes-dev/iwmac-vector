@@ -1,0 +1,73 @@
+A fix taken ahead of a release, applied by build/build.sh to the vendored crate named before "--", in craft-libs' paths.
+
+PDF interpret: a five-point polyline is not a rectangle. path_as_rect painted a stroked polyline whose points reach
+every corner of its own bounding box (a heat exchanger's zigzag, M L L L L) as that box. From storytold/craft-libs
+pull request 175, head 8b569a547c464d24ee0938f5195b3ef636c6294e, open on 2026-10-22; the source file only, its tests
+left out. Remove this file once the craft-libs commit a release pins has it: build.sh then says it is already in.
+
+diff --git a/vendor/hayro-interpret/src/context.rs b/vendor/hayro-interpret/src/context.rs
+index 9953b419..c94d78e7 100644
+--- a/vendor/hayro-interpret/src/context.rs
++++ b/vendor/hayro-interpret/src/context.rs
+@@ -455,11 +455,31 @@ pub(crate) fn path_as_rect(path: &BezPath) -> Option<Rect> {
+     let (min_x, min_y, max_x, max_y) = (bbox.min_x(), bbox.min_y(), bbox.max_x(), bbox.max_y());
+     let mut corners = [false; 4];
+ 
++    // PdfCraft patch: a point that is not a corner means this is not a rectangle. The length
++    // check above admits one MoveTo and four LineTo as well as the intended one MoveTo, three
++    // LineTo and one ClosePath, and covering the four corners says nothing about the points
++    // between them, so a five-point polyline whose ends reach every corner of its own bounding
++    // box was painted as that box.
++    let mut off_corner = false;
++    // PdfCraft patch: the points in order, to check that each edge runs along one axis. Four
++    // corners, each hit, still admits a bowtie -- `(min_x, min_y) -> (max_x, max_y) ->
++    // (min_x, max_y) -> (max_x, min_y)` crosses the interior on two diagonals and covers every
++    // corner (#175 review).
++    let mut points: Vec<Point> = Vec::with_capacity(4);
++
+     let mut check_point = |p: Point| {
+-        corners[0] |= p.x.is_nearly_equal(min_x) && p.y.is_nearly_equal(min_y);
+-        corners[1] |= p.x.is_nearly_equal(min_x) && p.y.is_nearly_equal(max_y);
+-        corners[2] |= p.x.is_nearly_equal(max_x) && p.y.is_nearly_equal(min_y);
+-        corners[3] |= p.x.is_nearly_equal(max_x) && p.y.is_nearly_equal(max_y);
++        points.push(p);
++        let hits = [
++            p.x.is_nearly_equal(min_x) && p.y.is_nearly_equal(min_y),
++            p.x.is_nearly_equal(min_x) && p.y.is_nearly_equal(max_y),
++            p.x.is_nearly_equal(max_x) && p.y.is_nearly_equal(min_y),
++            p.x.is_nearly_equal(max_x) && p.y.is_nearly_equal(max_y),
++        ];
++        off_corner |= !hits.iter().any(|hit| *hit);
++
++        for (corner, hit) in corners.iter_mut().zip(hits) {
++            *corner |= hit;
++        }
+     };
+ 
+     for (idx, el) in path.elements().iter().enumerate() {
+@@ -474,11 +494,24 @@ pub(crate) fn path_as_rect(path: &BezPath) -> Option<Rect> {
+             PathEl::LineTo(l) => check_point(*l),
+             PathEl::QuadTo(_, _) => return None,
+             PathEl::CurveTo(_, _, _) => return None,
++            // PdfCraft patch: a close that is not the last element starts a new subpath, so the
++            // points collected are not one outline: `M(0,0) L(100,0) L(100,60) Z L(0,60)` hits
++            // every corner with axis-aligned steps, while the path really closes on the diagonal
++            // from (100,60) to (0,0) and then draws a separate line (#175 review).
++            PathEl::ClosePath if idx + 1 != path.elements().len() => return None,
+             PathEl::ClosePath => {}
+         }
+     }
+ 
+-    if corners[0] && corners[1] && corners[2] && corners[3] {
++    // PdfCraft patch: every edge, the closing one included, moves along one axis only -- a
++    // rectangle's sides alternate horizontal and vertical, and a diagonal changes both.
++    let axis_aligned = points.len() == 4
++        && (0..4).all(|i| {
++            let (a, b) = (points[i], points[(i + 1) % 4]);
++            a.x.is_nearly_equal(b.x) != a.y.is_nearly_equal(b.y)
++        });
++
++    if !off_corner && axis_aligned && corners[0] && corners[1] && corners[2] && corners[3] {
+         Some(bbox)
+     } else {
+         None
