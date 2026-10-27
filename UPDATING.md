@@ -173,6 +173,30 @@ Built, tested and published on 2026-10-22.
 - **Speed:** a drag frame on 10214's Maskin at 1400 x 900 drew in 5.9 to 8.1 ms, against 5.3 to 8.9 ms in 0.11.0 and
   14.8 to 19.3 ms in the official 0.14.0 build.
 
+### Known: VectorCraft 0.17.0, published with the same fix
+
+Built, tested and published on 2026-10-27. 0.15.0 and 0.16.0 were never hosted.
+- **The heat exchanger.** 0.15.0 to 0.17.0 still open the zigzag as a rectangle, and so does the official 0.17.0
+  build. The upstream pull request with the fix was closed unmerged on 2026-10-24, when a batch of PDF reader fixes
+  was merged that leaves this one to it, so craft-libs' `main` still lacks it. 0.17.0 pins a newer craft-libs commit
+  (`2eca9b3`), and the patch applied to it unchanged. With it, every shape of the test `.ai` files opens as in 0.14.0.
+- **One label reads differently.** The Maskin template's "To offset", which the `.ai` keeps as the text "To o",
+  the outlined letters "ff" and the text "set", opens as one text "To offset". Its synced picture draws it about
+  3 px longer.
+- **The userscript (1.104.1):** its syncs placed as many objects as on 0.14.0 (77, 107, 77), the `.ai` flow gave
+  the same results apart from that label, and the first save was answered by the clicks alone, ready after 10.9 s
+  as on 0.14.0.
+- **Colours** from an `.ai` are the same as in 0.14.0.
+- **Drawing.** Since 0.15 a pan, zoom or drag moves the last frame, and renders once the view is still. While
+  dragging, the status bar's *render* reads about 0 ms at 240 fps, so `bench-drawing.py`'s readout no longer shows
+  what SIMD saves. Measured instead as the longest frame after a zoom step on 10214's Maskin at 1400 x 900 (median
+  of ten): 8.4 ms in this build, 12.4 ms in 0.14.0, 16.7 ms in the official 0.17.0.
+- **The wasm is 76.7 MB**, up from 73.1 MB in 0.14.0. GitHub refuses a file over 100 MB, so a later release may need
+  the wasm split or served from elsewhere.
+- **Watch for:** upstream has asked to name an opened SVG or PDF from its own title metadata, or its file stem,
+  instead of its file name. A first attempt was closed unmerged on 2026-10-25. The userscript waits for the window
+  title to be the file's name, so test that flow closely in the release that brings it.
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,

@@ -2,8 +2,10 @@ A fix taken ahead of a release, applied by build/build.sh to the vendored crate 
 
 PDF interpret: a five-point polyline is not a rectangle. path_as_rect painted a stroked polyline whose points reach
 every corner of its own bounding box (a heat exchanger's zigzag, M L L L L) as that box. From storytold/craft-libs
-pull request 175, head 8b569a547c464d24ee0938f5195b3ef636c6294e, open on 2026-10-22; the source file only, its tests
-left out. Remove this file once the craft-libs commit a release pins has it: build.sh then says it is already in.
+pull request 175, head 8b569a547c464d24ee0938f5195b3ef636c6294e; the source file only, its tests left out. That pull
+request was closed unmerged on 2026-10-24, when a batch of reader fixes was merged that leaves path_as_rect to it, so
+craft-libs' main still lacks the fix. Needed in 0.14.0 and 0.17.0. Remove this file once the craft-libs commit a
+release pins has the fix: build.sh then says it is already in.
 
 diff --git a/vendor/hayro-interpret/src/context.rs b/vendor/hayro-interpret/src/context.rs
 index 9953b419..c94d78e7 100644
