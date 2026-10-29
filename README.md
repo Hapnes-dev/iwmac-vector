@@ -12,7 +12,7 @@ Currently: VectorCraft 0.17.0.
 
 ## How this build differs from the official web build
 
-Three things differ from the official web release of the same version, and nothing else.
+Four things differ from the official web release of the same version, and nothing else.
 
 - **WebAssembly SIMD is on.** The official web release is built without it: its wasm's `target_features` lack
   `simd128`, and the canvas renderer (vello_cpu) then runs its scalar fallback. This build adds
@@ -43,6 +43,13 @@ Three things differ from the official web release of the same version, and nothi
   it comes from at its head. `build.sh` applies it to the library at the commit the release pins, and stops the
   build when it no longer fits. Now one: since 0.12.0 the PDF reader opens a stroked polyline whose points reach
   every corner of its bounding box, such as a heat exchanger's zigzag in an `.ai`, as that box.
+- **IWMAC objects keep their size.** The userscript marks with `data-iwdie-fixed="1"` the objects its Designer draws
+  as a picture of their own size: pumps, alarms, LEDs, valves, arrows, values' pills. A resize would only cut them
+  off or stretch them there. Here such an object moves and does nothing else. A selection of only such objects has
+  no handles. A scale or rotation of a selection that holds one, by handle, tool or the Transform panel, moves it by
+  its centre and leaves its size and turn. This is [`build/patches/vectorcraft--iwdie-fixed-size.patch`](build/patches/vectorcraft--iwdie-fixed-size.patch),
+  which `build.sh` applies to the release's source. It serves this site alone (UPDATING.md, *This site's own
+  changes*).
 
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
 at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in
@@ -55,8 +62,8 @@ and notices come from the official web zip.
 |---|---|
 | `app/` | The editor: the page, its loader, the `.wasm`, the fallback fonts, and the official web zip's licence files and notices |
 | `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
-| `build/build.sh` | Builds `app/` from a release tag: clones the tag, runs `debrand.py`, applies `build/patches/`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
-| `build/patches/` | Fixes taken ahead of a release, one patch per file, each to one vendored crate of craft-libs |
+| `build/build.sh` | Builds `app/` from a release tag: clones the tag, applies this site's own changes, runs `debrand.py`, applies the fixes in `build/patches/`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
+| `build/patches/` | One patch per file: fixes taken ahead of a release, each to one vendored crate of craft-libs, and this site's own changes to VectorCraft (`vectorcraft--…`) |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
 | `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version |
 | `build/bench-drawing.py` | Writes a made-up drawing shaped like an IWMAC panel, to time drags in two builds |

@@ -16,6 +16,21 @@ mkdir -p "$WORK"
 SRC="$WORK/vectorcraft-$VERSION-site"
 rm -rf "$SRC"
 git clone -q --depth 1 --branch "$TAG" https://github.com/storytold/vectorcraft "$SRC"
+
+# this site's own changes to VectorCraft: build/patches/vectorcraft--<what>.patch, in the release's own paths, applied
+# to the clone before debrand.py edits it. One that fits neither way stops the build.
+for P in "$HERE"/patches/vectorcraft--*.patch; do
+  [ -e "$P" ] || continue
+  NAME="$(basename "$P")"
+  if (cd "$SRC" && git apply --check "$P" 2>/dev/null); then
+    (cd "$SRC" && git apply "$P")
+    echo "patched VectorCraft: $NAME"
+  elif (cd "$SRC" && git apply -R --check "$P" 2>/dev/null); then
+    echo "$NAME is already in $TAG: not applied"
+  else
+    echo "$NAME does not fit $TAG (UPDATING.md, When a patch stops)" >&2; exit 1
+  fi
+done
 python3 "$HERE/debrand.py" "$SRC"
 
 # fixes taken ahead of a release: build/patches/<crate>--<what>.patch, in craft-libs' paths. The vendored crate is
@@ -26,6 +41,7 @@ for P in "$HERE"/patches/*.patch; do
   [ -e "$P" ] || continue
   NAME="$(basename "$P")"
   CRATE="${NAME%%--*}"
+  [ "$CRATE" = vectorcraft ] && continue
   if grep -E '^(---|\+\+\+) ' "$P" | grep -vE "^(---|\+\+\+) [ab]/vendor/$CRATE/" | grep -q .; then
     echo "$NAME changes files outside vendor/$CRATE" >&2; exit 1
   fi

@@ -250,9 +250,32 @@ polyline whose points reach every corner of its bounding box (an `.ai`'s heat ex
 - **When the release has the fix**, `build.sh` says *already in craft-libs …: not applied, remove it*. Delete the
   patch, and say so in the README's *How this build differs*.
 
+## This site's own changes
+
+Some changes serve the userscript alone and will never be in a release. Each is a patch to VectorCraft's own source
+in `build/patches/`, named `vectorcraft--<what>.patch`, with the release's paths (`crates/…`). `build.sh` applies it
+to the clone of the tag before `debrand.py` runs. Text before the first `diff --git` line says what it does and why.
+Keep these patches for every release.
+
+Since 2026-10-29 there is one: `vectorcraft--iwdie-fixed-size.patch`, *objects that keep their size*. The userscript
+marks with `data-iwdie-fixed="1"` the IWMAC objects its Designer draws as a picture of their own size, such as
+pumps, alarms and values' pills. VectorCraft keeps that mark as it keeps any `data-*` attribute. With the patch:
+- the Selection tool shows a selection of only such objects no handles and no rotate zones;
+- any transform moves such an object by its centre and leaves its size and turn. This covers a scale or rotation of
+  a selection that holds one, the Transform panel's width, and the Scale and Rotate tools;
+- a group that holds just one such object keeps its size too.
+
+Its test is `fixed_objects_keep_their_size` in `crates/doc/src/node.rs`. To run it with the doc and tools crates'
+tests, apply the patch to a clone of the tag, then run `cargo test -p vectorcraft-doc --lib` and
+`cargo test -p vectorcraft-tools --lib`.
+
 ### When a patch stops
 
-`build.sh` stops with *… fits neither craft-libs … nor its patched copy* when the pinned commit changed the code
+`build.sh` stops with *… does not fit vX.Y.Z* when a release changed the code a `vectorcraft--` patch edits. Apply
+it to a clone of the tag by hand (`git apply --reject`), rewrite what was rejected against the new code, and make
+the patch again with `git diff`, its head kept. Then run its test and build again.
+
+For a craft-libs patch, `build.sh` stops with *… fits neither craft-libs … nor its patched copy* when the pinned commit changed the code
 the patch edits, and with *… has no single craft-libs line for …* when the tag no longer takes the crate from
 craft-libs that way. Look whether the fix went in upstream in another form: open the `.ai` files with
 `context/vc013/ai-ab.js` (the private runbook) in an official build. If it did, delete the patch. If not, take the

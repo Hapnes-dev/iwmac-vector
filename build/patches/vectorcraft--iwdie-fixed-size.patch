@@ -1,0 +1,127 @@
+This site's own change to VectorCraft, applied by build/build.sh to the release's source before debrand.py.
+
+Objects that keep their size. An object marked data-iwdie-fixed="1" keeps its size and turn. The IWMAC Designer
+Import/Export userscript marks so the IWMAC objects its Designer draws as a picture of their own size: pumps, alarms,
+LEDs, valves, arrows, values' pills. A resize would only cut them off or stretch them there. With the Selection tool,
+a selection of such objects has no handles and no rotate zones, so a press on it moves it. Any transform - a scale or
+rotation of a selection that holds one, the Transform panel's width, the Scale and Rotate tools - moves such an object
+by its centre and leaves its size and turn. A group that holds just one such object keeps its size too. This serves
+the IWMAC workflow alone and is not for upstream. Keep it for every release, and carry it over by hand when it stops
+fitting (UPDATING.md, When a patch stops). Tested in vectorcraft-doc (fixed_objects_keep_their_size).
+
+diff --git a/crates/doc/src/node.rs b/crates/doc/src/node.rs
+index 9eebb57..0e59c5a 100644
+--- a/crates/doc/src/node.rs
++++ b/crates/doc/src/node.rs
+@@ -1189,6 +1189,21 @@ impl Node {
+     pub fn geometric_bounds(&self) -> Option<Rect> {
+         self.geometric(None)
+     }
++    /// iwmac-vector: whether this object keeps its size and turn. The IWMAC userscript marks so
++    /// (`data-iwdie-fixed="1"`) the objects its Designer draws as a picture of their own size - a
++    /// pump, an alarm, a value's pill - which a resize would only cut off or stretch there. A group
++    /// holding nothing but one such object (a dropped file's) keeps it too. A transform moves such
++    /// an object by its centre and does nothing else ([`Node::transform`]), and the Selection tool
++    /// shows it no handles.
++    pub fn keeps_size(&self) -> bool {
++        if self.extras().attrs.as_ref().is_some_and(|a| a.data.iter().any(|(k, v)| k == "iwdie-fixed" && v != "0")) {
++            return true;
++        }
++        match &self.kind {
++            NodeKind::Group { children, clip: false } => matches!(children.as_slice(), [only] if only.keeps_size()),
++            _ => false,
++        }
++    }
+     /// [`Node::geometric_bounds`] with each symbol instance measured as its transform applied to
+     /// its symbol's art box from `symbols`. An instance is measured as the square when its symbol
+     /// is missing, when its symbol or a symbol nested in its art holds an instance of itself, and
+@@ -1325,6 +1340,11 @@ impl Node {
+         self.transform_scaled(a, &scaling.into());
+     }
+     fn transform_scaled(&mut self, a: Affine, sc: &Scaling) {
++        // iwmac-vector: an object that keeps its size only moves, its centre to where `a` takes it.
++        let a = match self.keeps_size().then(|| self.geometric_bounds()).flatten() {
++            Some(b) => Affine::translate(a * b.center() - b.center()),
++            None => a,
++        };
+         // A dimension's measurement moves with it.
+         if let Some(e) = self.extras_if_any()
+             && let Some(dimension) = &mut e.dimension
+@@ -2165,6 +2185,39 @@ mod kind_de {
+ mod tests {
+     use super::*;
+ 
++    /// iwmac-vector: an object marked `data-iwdie-fixed` keeps its size and turn - a scale or a
++    /// rotation moves it by its centre - and so does a group of just that object. A group with more
++    /// in it scales, and each fixed object in it moves by its centre.
++    #[test]
++    fn fixed_objects_keep_their_size() {
++        let fixed = |id: u64, r: Rect| {
++            let mut n = Node::path(NodeId(id), shapes::rectangle(r), Appearance::default_art());
++            n.extras_mut().attrs = Some(Box::new(ObjectAttributes { data: vec![("iwdie-fixed".into(), "1".into())], ..Default::default() }));
++            n
++        };
++        let mut n = fixed(1, Rect::new(10.0, 10.0, 30.0, 20.0));
++        assert!(n.keeps_size());
++        n.transform(Affine::scale(2.0), false);
++        assert_eq!(n.geometric_bounds(), Some(Rect::new(30.0, 25.0, 50.0, 35.0)));
++        n.transform(Affine::rotate(1.0), false);
++        let b = n.geometric_bounds().unwrap();
++        assert!((b.width() - 20.0).abs() < 1e-9 && (b.height() - 10.0).abs() < 1e-9, "{b:?}");
++        let mut one = Node::group(NodeId(2), vec![Arc::new(fixed(3, Rect::new(0.0, 0.0, 10.0, 10.0)))]);
++        assert!(one.keeps_size());
++        one.transform(Affine::scale(3.0), false);
++        assert_eq!(one.geometric_bounds(), Some(Rect::new(10.0, 10.0, 20.0, 20.0)));
++        let plain = Node::path(NodeId(4), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 10.0)), Appearance::default_art());
++        let mut two = Node::group(NodeId(5), vec![Arc::new(fixed(6, Rect::new(20.0, 0.0, 30.0, 10.0))), Arc::new(plain)]);
++        assert!(!two.keeps_size());
++        two.transform(Affine::scale(2.0), false);
++        let kids = two.children().unwrap();
++        assert_eq!(kids[0].geometric_bounds(), Some(Rect::new(45.0, 5.0, 55.0, 15.0)), "the fixed one moved by its centre");
++        assert_eq!(kids[1].geometric_bounds(), Some(Rect::new(0.0, 0.0, 20.0, 20.0)), "the plain one scaled");
++        let mut zero = fixed(7, Rect::new(0.0, 0.0, 10.0, 10.0));
++        zero.extras_mut().attrs = Some(Box::new(ObjectAttributes { data: vec![("iwdie-fixed".into(), "0".into())], ..Default::default() }));
++        assert!(!zero.keeps_size(), "0 says it may be resized");
++    }
++
+     /// A node writes its rarely set parts among the others, in the file's field order, and reads
+     /// them back into its extras; a node without any keeps none.
+     #[test]
+diff --git a/crates/tools/src/select.rs b/crates/tools/src/select.rs
+index 07a6c08..4f4c1e3 100644
+--- a/crates/tools/src/select.rs
++++ b/crates/tools/src/select.rs
+@@ -428,8 +428,18 @@ enum BoxHit {
+     Rotate,
+ }
+ 
++/// iwmac-vector: whether every selected object keeps its size
++/// ([`vectorcraft_doc::Node::keeps_size`]): its bounding box then has no handles and no rotate
++/// zones, and a press there moves it.
++pub fn selection_keeps_size(cx: &ToolContext) -> bool {
++    !cx.selection.objects.is_empty() && cx.selection.objects.iter().all(|id| cx.doc.node(*id).is_some_and(|n| n.keeps_size()))
++}
++
+ /// The bounding-box handle or rotate zone under `p`.
+ fn box_hit(cx: &ToolContext, b: &OrientedBox, p: Point) -> Option<BoxHit> {
++    if selection_keeps_size(cx) {
++        return None;
++    }
+     let (tol, lp) = (cx.tol(5.0), b.to_local(p));
+     if let Some(h) = hit_handle(b.rect, lp, tol) {
+         return Some(BoxHit::Handle(h));
+diff --git a/crates/ui-egui/src/canvas.rs b/crates/ui-egui/src/canvas.rs
+index e3ddd74..70876ad 100644
+--- a/crates/ui-egui/src/canvas.rs
++++ b/crates/ui-egui/src/canvas.rs
+@@ -2992,7 +2992,9 @@ fn selection_overlay(app: &mut VectorcraftApp, p: &egui::Painter, xf: &Xf, curve
+     if let Some(b) = bbox {
+         let color = c32(st.doc.layer_color(st.selection.objects[0]));
+         p.add(Shape::closed_line(b.corners().iter().map(|q| xf.to_screen(*q)).collect(), Stroke::new(1.0, color)));
+-        for h in vectorcraft_tools::bbox::Handle::ALL {
++        // iwmac-vector: objects that keep their size have no handles: they only move
++        let keeps_size = st.selection.objects.iter().all(|id| st.doc.node(*id).is_some_and(|n| n.keeps_size()));
++        for h in vectorcraft_tools::bbox::Handle::ALL.into_iter().filter(|_| !keeps_size) {
+             let c = xf.to_screen(b.to_doc() * h.pos(b.rect));
+             let hr = egui::Rect::from_center_size(c, vec2(6.0 + grow, 6.0 + grow));
+             p.rect_filled(hr, 0.0, Color32::WHITE);
