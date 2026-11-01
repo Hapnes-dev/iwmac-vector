@@ -70,6 +70,7 @@ Every line must read PASS. The workflow runs the same check and fails if any lin
 | Check | Why |
 |---|---|
 | The page's SHA-384 (integrity) matches the loader and the wasm | A changed file, a line ending included, stops the editor from loading |
+| Every file is under 100 MiB (WARN from 80) | GitHub refuses a larger file. The wasm ships gzipped for that (`compress-wasm.py`), and `check.py` checks it unpacked |
 | `simd128` is in the wasm's target features | The whole point of this build: about 2.3 times as fast |
 | "ArtCraft" appears exactly once, in "Based on VectorCraft by the ArtCraft team" | The brand terms: a modified build carries no ArtCraft marks |
 | No ArtCraft links (getartcraft.com, discord.gg/artcraft) | The same |
@@ -371,10 +372,21 @@ needed. To do that, bring back the workflow's earlier version, which downloaded 
 it into `app/`; it is in the history from before 2026-10-17. Then update the README's *How this build differs*
 section, and change `check.py`'s ArtCraft line to accept the official build.
 
+But the official wasm is as large as this one, so it would still have to ship gzipped, and `compress-wasm.py`
+changes the page. Read the brand terms again before dropping `debrand.py` for a build whose page is changed.
+
 ## Why these choices
 
 - **SIMD, not more.** wasm-opt at -O3 instead of the release's -Oz gave nothing measurable, so everything else
   stays as the release builds it.
+- **The wasm gzipped, not split or hosted elsewhere.** GitHub refuses a file of 100 MiB or more, GitHub Pages does not
+  serve Git LFS files (only their pointers), and Cloudflare Pages takes no file over 25 MiB. gzip, not brotli: brotli
+  makes 0.20.0's wasm 18.2 MiB instead of 29.8 MiB, but browsers unpack only gzip and deflate in a page (Chrome 156's
+  DecompressionStream has no brotli or zstd), and a brotli decoder in JavaScript would be more of our own code, and
+  slower. Measured on 0.20.0 in Chrome, cold loads, against the raw wasm sent gzipped as Pages sends it: 2979 ms
+  against 2952 at 100 Mbit/s, 8910 against 8953 at 30 Mbit/s; from the browser's cache 554 ms against 285 (unpacking
+  306 ms and the SHA-384 156 ms, partly in parallel). A server that unpacks the file itself (Content-Encoding: gzip)
+  is handled: the page sees the wasm's own first bytes and skips the unpacking.
 - **Byte for byte.** `app/** -text` in `.gitattributes` keeps every file as built. The page names the loader and
   the wasm by SHA-384, and a line ending converted by Git on Windows would stop the editor.
 - **A build of our own, not the official zip.** The official web release lacks SIMD. Measured on 10214's Maskin,

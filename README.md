@@ -12,7 +12,7 @@ Currently: VectorCraft 0.20.0.
 
 ## How this build differs from the official web build
 
-Four things differ from the official web release of the same version, and nothing else.
+Five things differ from the official web release of the same version, and nothing else.
 
 - **WebAssembly SIMD is on.** The official web release is built without it: its wasm's `target_features` lack
   `simd128`, and the canvas renderer (vello_cpu) then runs its scalar fallback. This build adds
@@ -50,6 +50,13 @@ Four things differ from the official web release of the same version, and nothin
   its centre and leaves its size and turn. This is [`build/patches/vectorcraft--iwdie-fixed-size.patch`](build/patches/vectorcraft--iwdie-fixed-size.patch),
   which `build.sh` applies to the release's source. It serves this site alone (UPDATING.md, *This site's own
   changes*).
+- **The wasm ships gzipped.** GitHub refuses a file of 100 MiB or more, and VectorCraft's wasm passed 80 MiB in
+  0.20.0, with no name or debug section left to strip. So [`build/compress-wasm.py`](build/compress-wasm.py) writes
+  it as `vectorcraft-web-<hash>_bg.wasm.gz`, about 37 % of its size, and changes the page's loader. The loader unpacks
+  the file as it downloads and compiles it meanwhile. It starts it only once its SHA-384 is the one the page was built
+  with, the check the page's integrity attribute made before. A browser downloads the same bytes as before, since
+  GitHub Pages already sent the wasm gzipped. A first load takes as long as before; a load from the browser's cache
+  takes about a quarter of a second longer, for the unpacking and the check.
 
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
 at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in
@@ -60,12 +67,13 @@ and the app's icons (`icons/`), new in 0.20, are this build's own.
 
 | Path | What |
 |---|---|
-| `app/` | The editor: the page, its loader, the `.wasm`, the fallback fonts, and the official web zip's licence files and notices |
+| `app/` | The editor: the page, its loader, the wasm (gzipped), the fallback fonts, and the official web zip's licence files and notices |
 | `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
 | `build/build.sh` | Builds `app/` from a release tag: clones the tag, applies this site's own changes, runs `debrand.py`, applies the fixes in `build/patches/`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
 | `build/patches/` | One patch per file: fixes taken ahead of a release, each to one vendored crate of craft-libs, and this site's own changes to VectorCraft (`vectorcraft--…`) |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
-| `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version |
+| `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version, every file under GitHub's 100 MiB |
+| `build/compress-wasm.py` | Ships the wasm gzipped, and makes the page unpack it and check its SHA-384 before it runs (`build.sh` runs it) |
 | `build/bench-drawing.py` | Writes a made-up drawing shaped like an IWMAC panel, to time drags in two builds |
 | `index.html` | A short landing page with the attribution |
 | `.nojekyll` | Serve every file as it is (Pages would otherwise skip `_headers`) |

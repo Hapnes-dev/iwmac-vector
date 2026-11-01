@@ -114,11 +114,14 @@ for D in snippets icons; do
   if [ -d "$WORK/dist-site/$D" ]; then rm -rf "$REPO/app/$D"; cp -r "$WORK/dist-site/$D" "$REPO/app/"; fi
 done
 
+# the wasm gzipped, the page unpacking and checking it: GitHub refuses a file over 100 MiB (compress-wasm.py)
+python3 "$HERE/compress-wasm.py" "$REPO/app"
+
 # the check: SIMD in, and the ArtCraft name only where the attribution and the notices say it
 python3 - "$REPO/app" <<'PY'
-import glob, sys
+import glob, gzip, sys
 app = sys.argv[1]
-wasm = open(glob.glob(app + "/vectorcraft-web-*_bg.wasm")[0], "rb").read()
+wasm = gzip.decompress(open(glob.glob(app + "/vectorcraft-web-*_bg.wasm.gz")[0], "rb").read())
 assert b"simd128" in wasm, "the wasm has no simd128 feature"
 print("simd128 in the wasm's target features; 'ArtCraft' occurs", wasm.count(b"ArtCraft"), "times in the wasm")
 PY
