@@ -8,7 +8,7 @@ userscript:
 - **Editor:** https://hapnes-dev.github.io/iwmac-vector/app/
 - **This page:** https://hapnes-dev.github.io/iwmac-vector/
 
-Currently: VectorCraft 0.17.0.
+Currently: VectorCraft 0.20.0.
 
 ## How this build differs from the official web build
 
@@ -32,7 +32,7 @@ Four things differ from the official web release of the same version, and nothin
   [docs/brand/LICENSE-brand.txt](https://github.com/storytold/vectorcraft/blob/main/docs/brand/LICENSE-brand.txt)
   asks a published modified version to carry none of them. So
   [`build/debrand.py`](build/debrand.py) takes out:
-  - the Discord button;
+  - the Discord button, and Discord in the Help menu and in the application menu (macOS's own);
   - the Help menu's ArtCraft website and getartcraft.com entries;
   - the translations that name ArtCraft.
 
@@ -53,8 +53,8 @@ Four things differ from the official web release of the same version, and nothin
 
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
 at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in
-0.13. The licence files
-and notices come from the official web zip.
+0.13. The licence files and notices come from the official web zip. The JavaScript the loader imports (`snippets/`)
+and the app's icons (`icons/`), new in 0.20, are this build's own.
 
 ## What is here
 

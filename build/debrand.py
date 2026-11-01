@@ -57,12 +57,20 @@ edit("crates/engine/src/cmd/help.rs", [(c, "") for c in cmds] + [
      'Ok(json!({ "github": github_url() }))'),
 ])
 
-# the Help menu
-edit("crates/ui-egui/src/menus.rs", [
+# the Help menu; from 0.20 the menus are in menus/tree.rs, whose application menu (macOS's own, never shown in the
+# in-window bar) lists Discord beside About as well
+HELP = [
     ('                c("Join Our Discord", "help.discord"),\n', ""),
     ('                c("ArtCraft Website", "help.website"),\n', ""),
     ('                c("VectorCraft on getartcraft.com", "help.appPage"),\n', ""),
-])
+]
+if (root / "crates/ui-egui/src/menus/tree.rs").exists():
+    edit("crates/ui-egui/src/menus/tree.rs", HELP + [
+        ('vec![c("About VectorCraft", "help.about"), c("Join Our Discord", "help.discord")],',
+         'vec![c("About VectorCraft", "help.about")],'),
+    ])
+else:
+    edit("crates/ui-egui/src/menus.rs", HELP)
 
 # About
 edit("crates/ui-egui/src/dialogs/about.rs", [

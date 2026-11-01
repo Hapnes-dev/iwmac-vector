@@ -197,6 +197,36 @@ Built, tested and published on 2026-10-27. 0.15.0 and 0.16.0 were never hosted.
   instead of its file name. A first attempt was closed unmerged on 2026-10-25. The userscript waits for the window
   title to be the file's name, so test that flow closely in the release that brings it.
 
+### Known: VectorCraft 0.20.0, published with both patches carried over
+
+Built, tested and published on 2026-11-01. 0.18.0 and 0.19.0 were never hosted.
+- **The own patch no longer fitted.** 0.20.0 split `crates/doc/src/node.rs` and `crates/ui-egui/src/canvas.rs` into
+  modules. The code the patch edits is unchanged, only moved: to `node/ops.rs`, `node/tests.rs` and
+  `canvas/overlays.rs`. The patch was carried over by hand (`git apply --reject`, the four hunks placed again, the
+  patch made again with its head kept). `vectorcraft-doc` passes 332 tests and `vectorcraft-tools` 767 with it,
+  `fixed_objects_keep_their_size` among them. In the browser, a marked object shows no handles and keeps its size
+  when dragged by a corner, as in 0.17.0.
+- **debrand.py stopped too.** The menus moved to `crates/ui-egui/src/menus/tree.rs`, and its application menu (macOS's
+  own, never shown in the in-window bar) lists Discord beside About. `debrand.py` now edits `menus/tree.rs` when it
+  exists, that line included, and `menus.rs` before 0.20.
+- **The heat exchanger.** The release still opens the zigzag as a rectangle, and the craft-libs commit it pins still
+  lacks the fix, so the craft-libs patch stays; it applied unchanged. Every shape and every text of the test `.ai`
+  files opens as in 0.17.0.
+- **New in the package:** `snippets/` (JavaScript the loader imports) and `icons/`. `build.sh` copies this build's own,
+  instead of leaving the official zip's.
+- **SVG export writes shape elements.** From 0.19 a saved SVG holds `<rect>`, `<circle>`, `<ellipse>`, `<line>`,
+  `<polyline>` and `<polygon>` where it held `<path>`. Compare two builds' SVGs by geometry, not by tag.
+- **The canvas is 15 px narrower** (a new collapse bar on the right dock): Fit Artboard in Window gives 65.86 % instead
+  of 66.93 % at 1400 x 900. Anything that maps document points to the screen by fixed numbers drifts; read the view
+  from `window.vectorcraft.inspect()` (`canvasRect`, `view.zoom`, `view.center`) instead.
+- **The userscript (1.107.5):** its syncs placed as many objects as on 0.17.0, the first save was answered by the
+  clicks alone, and the IWMAC title stands where it stood in the menu bar, 12 px after Help.
+- **Speed:** a full render after a zoom step on 10214's Maskin, 8.4 ms here, 8.4 ms in 0.17.0, 16.8 ms in the official
+  0.20.0.
+- **The wasm is 85.3 MB**, up from 76.7 MB in 0.17.0. GitHub refuses a file over 100 MB, and at this pace a release
+  within a few weeks will reach it. Before then, decide how to serve it: the wasm compressed and unpacked by the page,
+  or the site hosted where a large file is allowed (GitHub Pages does not serve Git LFS files).
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,

@@ -108,6 +108,11 @@ cp -r "$OFFICIAL/." "$REPO/app/"
 rm -f "$REPO/app/index.html" "$REPO/app/"vectorcraft-web-*.js "$REPO/app/"vectorcraft-web-*_bg.wasm "$REPO/app/README.md"
 cp "$WORK/dist-site/index.html" "$WORK/dist-site/"vectorcraft-web-*.js "$WORK/dist-site/"vectorcraft-web-*_bg.wasm "$REPO/app/"
 [ -d "$WORK/dist-site/fonts" ] && cp -r "$WORK/dist-site/fonts" "$REPO/app/"
+# from 0.20 the build also writes the JavaScript its loader imports (snippets/) and the app's icons (icons/): ours,
+# not the official zip's, so a snippet of this build's own can never be one the loader does not find
+for D in snippets icons; do
+  if [ -d "$WORK/dist-site/$D" ]; then rm -rf "$REPO/app/$D"; cp -r "$WORK/dist-site/$D" "$REPO/app/"; fi
+done
 
 # the check: SIMD in, and the ArtCraft name only where the attribution and the notices say it
 python3 - "$REPO/app" <<'PY'
