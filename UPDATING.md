@@ -219,7 +219,7 @@ Built, tested and published on 2026-11-01. 0.18.0 and 0.19.0 were never hosted.
 - **The canvas is 15 px narrower** (a new collapse bar on the right dock): Fit Artboard in Window gives 65.86 % instead
   of 66.93 % at 1400 x 900. Anything that maps document points to the screen by fixed numbers drifts; read the view
   from `window.vectorcraft.inspect()` (`canvasRect`, `view.zoom`, `view.center`) instead.
-- **The userscript (1.107.5):** its syncs placed as many objects as on 0.17.0, the first save was answered by the
+- **The userscript (1.107.6):** its syncs placed as many objects as on 0.17.0, the first save was answered by the
   clicks alone, and the IWMAC title stands where it stood in the menu bar, 12 px after Help.
 - **Speed:** a full render after a zoom step on 10214's Maskin, 8.4 ms here, 8.4 ms in 0.17.0, 16.8 ms in the official
   0.20.0.
