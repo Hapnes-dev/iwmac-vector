@@ -8,11 +8,11 @@ userscript:
 - **Editor:** https://hapnes-dev.github.io/iwmac-vector/app/
 - **This page:** https://hapnes-dev.github.io/iwmac-vector/
 
-Currently: VectorCraft 0.20.0.
+Currently: VectorCraft 0.22.0.
 
 ## How this build differs from the official web build
 
-Five things differ from the official web release of the same version, and nothing else.
+Four things differ from the official web release of the same version, and nothing else.
 
 - **WebAssembly SIMD is on.** The official web release is built without it: its wasm's `target_features` lack
   `simd128`, and the canvas renderer (vello_cpu) then runs its scalar fallback. This build adds
@@ -38,11 +38,6 @@ Five things differ from the official web release of the same version, and nothin
 
   Help › About says the build is based on VectorCraft by the ArtCraft team. The link to VectorCraft's source on
   GitHub stays.
-- **Fixes taken ahead of a release.** A fix that VectorCraft or its libraries have not released yet, when a release
-  breaks something the userscript's drawings need. Each is a patch in [`build/patches/`](build/patches/), with where
-  it comes from at its head. `build.sh` applies it to the library at the commit the release pins, and stops the
-  build when it no longer fits. Now one: since 0.12.0 the PDF reader opens a stroked polyline whose points reach
-  every corner of its bounding box, such as a heat exchanger's zigzag in an `.ai`, as that box.
 - **IWMAC objects keep their size.** The userscript marks with `data-iwdie-fixed="1"` the objects its Designer draws
   as a picture of their own size: pumps, alarms, LEDs, valves, arrows, values' pills. A resize would only cut them
   off or stretch them there. Here such an object moves and does nothing else. A selection of only such objects has
@@ -57,6 +52,11 @@ Five things differ from the official web release of the same version, and nothin
   with, the check the page's integrity attribute made before. A browser downloads the same bytes as before, since
   GitHub Pages already sent the wasm gzipped. A first load takes as long as before; a load from the browser's cache
   takes about a quarter of a second longer, for the unpacking and the check.
+
+`build/patches/` can also carry a fix a release does not have yet, applied to the library at the commit the release
+pins (UPDATING.md, *Fixes taken ahead of a release*). None is needed now. From 0.14.0 to 0.20.0 this site carried the PDF
+reader's fix for a stroked polyline that reaches every corner of its bounding box, such as a heat exchanger's zigzag in
+an `.ai`, which had opened as that box. 0.22.0 has the fix itself.
 
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
 at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in

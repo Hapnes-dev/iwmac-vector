@@ -228,6 +228,29 @@ Built, tested and published on 2026-11-01. 0.18.0 and 0.19.0 were never hosted.
   within a few weeks will reach it. Before then, decide how to serve it: the wasm compressed and unpacked by the page,
   or the site hosted where a large file is allowed (GitHub Pages does not serve Git LFS files).
 
+### Known: VectorCraft 0.22.0, published without the craft-libs patch
+
+Built, tested and published on 2026-11-08. 0.21.0 and 0.21.1 were never hosted.
+- **The heat exchanger is fixed upstream.** 0.22.0 pins a craft-libs commit with upstream's own fix for the stroked
+  polyline, stricter than ours: a five-point path counts as a rectangle only if it returns to its start and every step
+  runs along one axis. `build.sh` met our patch with *fits neither*. The official 0.22.0 then opened the six test
+  `.ai` files byte for byte as the patched 0.20.0 did, so the patch was deleted (*Fixes taken ahead of a release*).
+- **The own patch** applied unchanged. With it, vectorcraft-doc passes 404 tests and vectorcraft-tools 850. In the
+  browser a marked object shows no handles and keeps its size, as on 0.20.0. `debrand.py` ran unchanged.
+- **The wasm** is 86.2 MiB and ships as 31.2 MiB gzipped, the first release built with `compress-wasm.py`.
+- **`.ai` files:** our 0.22.0 opens all six test files byte for byte as the live 0.20.0, shapes and texts alike.
+- **The userscript (1.115.0):** its syncs placed as many objects as on 0.20.0. The `.ai` flow gave the same results,
+  its synced picture the same to the pixel. The first save was answered through VectorCraft's control channel. The
+  IWMAC title stands 12 px after Help, and its menu opens with the same 175 rows.
+- **Speed:** a full render after a zoom step on 10214's Maskin takes 8.4 ms, as in 0.20.0, against 16.7 ms in the
+  official 0.22.0.
+- **SIMD upstream:** the official web build gets WebAssembly SIMD after 0.22.0. This site keeps building its own, for
+  its own patch; `+simd128` then only repeats what the release sets, and `check.py` keeps checking for it. Update the
+  README's *How this build differs* when the official build has it.
+- **Watch:** an open upstream change would name an opened file by its stem (`x.svg` opens as `x`) or by the title it
+  carries. The userscript waits for the window title to be the file's name, so test that flow closely in the release
+  that brings it.
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,
@@ -269,8 +292,11 @@ rollback, unless the new version changed its file format. Read the release notes
 ## Fixes taken ahead of a release
 
 When a release breaks something the userscript's drawings need, and a fix exists upstream but is not released, the
-fix can go in `build/patches/` until a release has it. Since 0.14.0 there is one: the PDF reader painted a stroked
-polyline whose points reach every corner of its bounding box (an `.ai`'s heat exchanger zigzag) as that box.
+fix can go in `build/patches/` until a release has it. None is needed now. From 0.14.0 to 0.20.0 there was one,
+`hayro-interpret--polyline-not-a-rectangle.patch`: the PDF reader painted a stroked polyline whose points reach every
+corner of its bounding box (an `.ai`'s heat exchanger zigzag) as that box. 0.22.0 has upstream's own fix, which
+`build.sh` met with *fits neither*. The official 0.22.0 then opened the test `.ai` files byte for byte as the patched
+0.20.0 did, so the patch was deleted. It is in the history if a release ever needs it again.
 
 - **One patch per file**, named `<crate>--<what>.patch`, for one vendored crate of storytold/craft-libs, with
   craft-libs' paths (`vendor/<crate>/…`). Text before the first `diff --git` line is ignored: say there where the

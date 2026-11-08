@@ -18,13 +18,13 @@
   <link rel="apple-touch-icon" href="icons/256/ai.storyteller.vectorcraft.png">
   
 <script type="module">
-import init, * as bindings from './vectorcraft-web-8015027ea60d3039.js';
+import init, * as bindings from './vectorcraft-web-6244518aec9055ad.js';
 // iwmac-vector: the wasm ships gzipped (GitHub refuses a file over 100 MiB; build/compress-wasm.py). It is unpacked
 // as it downloads (unless the server already did: then it does not start 1f 8b) and compiled meanwhile, and only
 // once its SHA-384 is the one this page was built with does init instantiate and start it.
 const wasm = await init({ module_or_path: await (async () => {
-  const res = await fetch('./vectorcraft-web-8015027ea60d3039_bg.wasm.gz');
-  if (!res.ok) throw new Error('vectorcraft-web-8015027ea60d3039_bg.wasm.gz: HTTP ' + res.status);
+  const res = await fetch('./vectorcraft-web-6244518aec9055ad_bg.wasm.gz');
+  if (!res.ok) throw new Error('vectorcraft-web-6244518aec9055ad_bg.wasm.gz: HTTP ' + res.status);
   const reader = res.body.getReader(), first = await reader.read(), head = first.value || new Uint8Array(0);
   let body = new ReadableStream({
     start(c) { if (!first.done) c.enqueue(head); else c.close(); },
@@ -35,7 +35,7 @@ const wasm = await init({ module_or_path: await (async () => {
   const compiled = WebAssembly.compileStreaming(new Response(toCompile, { headers: { 'Content-Type': 'application/wasm' } }));
   const bytes = await new Response(toCheck).arrayBuffer();
   const sum = 'sha384-' + btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest('SHA-384', bytes))));
-  if (sum !== 'sha384-+vgAAfLi6sHD9VJhxXoo+/oo8oc50auZuytgW6WlcnQZ0Du+2vz3yc1XvA9hV/I9') throw new Error('vectorcraft-web-8015027ea60d3039_bg.wasm: not the wasm this page was built with');
+  if (sum !== 'sha384-utQlV75XdPYeyiEmZeHrABJCSP5teIhn0DG2D5NoGuEbPpOYCTuGNW2w/rWFxkJh') throw new Error('vectorcraft-web-6244518aec9055ad_bg.wasm: not the wasm this page was built with');
   return await compiled;
 })() });
 
@@ -60,7 +60,7 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
     #vectorcraft_loading { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
       color: #b8b8b8; font: 14px system-ui, sans-serif; pointer-events: none; }
   </style>
-<link rel="modulepreload" href="./vectorcraft-web-8015027ea60d3039.js" crossorigin="anonymous" integrity="sha384-x6Ojqc4bJB9IkY44x5pXU5pqlaxTldKsXeA/UU5nSaRYbKk5LdNdBtrNgTVoNKzf"><link rel="modulepreload" href="./snippets/eframe-d31a8450ea12dfc1/inline0.js" crossorigin="anonymous" integrity="sha384-uPZQ72BwgZ4v7Km6+UIFbkDDlt7ShGEsAVEHVN/+wZSGFhItJZB83iKMFQXauTSs"><link rel="preload" href="./vectorcraft-web-8015027ea60d3039_bg.wasm.gz" crossorigin="anonymous" as="fetch"></head>
+<link rel="modulepreload" href="./vectorcraft-web-6244518aec9055ad.js" crossorigin="anonymous" integrity="sha384-9Mq6XNHfyibveNct7AuwMaHNEcBM4p5xEzplNFePv1alYN+wvzXgR01EHDJOImWL"><link rel="modulepreload" href="./snippets/eframe-d31a8450ea12dfc1/inline0.js" crossorigin="anonymous" integrity="sha384-uPZQ72BwgZ4v7Km6+UIFbkDDlt7ShGEsAVEHVN/+wZSGFhItJZB83iKMFQXauTSs"><link rel="preload" href="./vectorcraft-web-6244518aec9055ad_bg.wasm.gz" crossorigin="anonymous" as="fetch"></head>
 <body>
   <canvas id="vectorcraft_canvas"></canvas>
   <div id="vectorcraft_loading">Loading VectorCraft&hellip;</div>
