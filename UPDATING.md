@@ -120,12 +120,17 @@ then compare it with the live build:
 - the first save, which must answer Save As by the clicks alone (the userscript answers by clicks first since
   1.83.2).
 
-**By hand, right after going live** (5 minutes, in the live Designer, on a test panel):
-1. Open the panel in the IWMAC Designer and choose **Edit in VectorCraft**. The drawing and its objects open, and
-   the card says *Ready to sync* after a few seconds. No Save As dialog stays on screen.
-2. Move one object and press **Ctrl+S**. The Designer's tab shows *✓ Synced*, and the object has moved on the
-   panel.
-3. Press Ctrl+Z in VectorCraft and Ctrl+S again, so the panel is as it was.
+**By hand, right after going live** (5 minutes, in the live Designer, on a test panel or one you will not save):
+1. Open the panel in the IWMAC Designer and choose **Edit in VectorCraft**. If a card asks where the drawing comes
+   from, take the plant's `.ai` or *Vectorize image*, and add the panel's objects when VectorCraft asks. The drawing
+   and its objects open, and after a few seconds the IWMAC card in VectorCraft ends on a green line: *✓ Ready to
+   sync*, or, for an `.ai`, that the panel's objects are on it. No Save As dialog stays on screen.
+2. Move one object and press **Ctrl+S**. The card says *✓ Synced* with the time, the Designer *Background and IWMAC
+   objects from VectorCraft*, and the object has moved on the panel.
+3. Press Ctrl+Z in VectorCraft and Ctrl+S again, and the object is back. The panel's background is now the PNG the
+   sync uploaded, under a name of its own (`<plant>_<panel>_<ddmmyy>.png`), so the plant's own picture is never
+   written over. Do not save the panel: load it again (*Retrieve*, *Load*) and it is as it was. The uploaded PNG
+   stays among the plant's pictures, unused.
 
 If step 1 takes much longer than before, or a Save As dialog flashes, the userscript's Save As keys no longer
 fit. The userscript then falls back to clicks, which still works, but slower. See the userscript's README, *The
@@ -242,6 +247,9 @@ Built, tested and published on 2026-11-08. 0.21.0 and 0.21.1 were never hosted.
 - **The userscript (1.115.0):** its syncs placed as many objects as on 0.20.0. The `.ai` flow gave the same results,
   its synced picture the same to the pixel. The first save was answered through VectorCraft's control channel. The
   IWMAC title stands 12 px after Help, and its menu opens with the same 175 rows.
+- **In the live Designer** (step 5, the same day, the first time since 0.14.0): 2349's Maskin opened from the plant's
+  `.ai`, with the panel's 58 objects added. One object moved and synced, then synced back, and the panel loaded
+  again unchanged. A selected object showed no handles, as the own patch makes it.
 - **Speed:** a full render after a zoom step on 10214's Maskin takes 8.4 ms, as in 0.20.0, against 16.7 ms in the
   official 0.22.0.
 - **SIMD upstream:** the official web build gets WebAssembly SIMD after 0.22.0. This site keeps building its own, for
