@@ -287,6 +287,12 @@ Built, tested and published on 2026-11-10.
 - **The userscript (1.115.3):** its syncs placed as many objects as on 0.22.0 (77, 107 and 77). The `.ai` flow gave the
   same results, its synced picture differing by those colours alone. The first save was answered through the control
   channel, which 0.23.0 builds from a shared library with the same methods. The IWMAC title stands 12 px after Help.
+- **In the live Designer** (step 5, the same day, userscript 1.115.3): 2349's Maskin opened from the drawing its picture
+  keeps, with the panel's objects on top. The card ended on *✓ Ready to sync*, and no Save As stayed on screen. One
+  object moved and synced (*✓ Synced · 1 changed*, 1 of 59 objects moved), then synced back, and the panel loaded
+  again unchanged. The synced picture came out 1280 × 1024 instead of the 1400 × 750 of the picture it came from.
+  2349's Designer canvas is 1280 × 1024, and userscript 1.115.3 laid the kept drawing out at the canvas's size. That
+  is the userscript's own layout, which 1.115.4 changes, not VectorCraft's.
 - **The wasm** is 93.7 MiB, shipped as 34.1 MiB gzipped. The official one, 93.8 MiB raw, is just under GitHub's limit.
 - **Nothing to do:** the new progress window for a slow open shows on the desktop only, since the web opens files at
   once; and an `.ai` with editing data no longer shows the Import PDF dialog, which the userscript never answered.
