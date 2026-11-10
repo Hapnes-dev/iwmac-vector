@@ -1,7 +1,8 @@
 # Updating VectorCraft on this site
 
 This is the runbook for moving https://hapnes-dev.github.io/iwmac-vector/app/ to a new VectorCraft release. The
-build is made from the release's official source with two changes: WebAssembly SIMD, and no ArtCraft name. The
+build is made from the release's official source with three changes: the site's own patch, the wasm shipped gzipped,
+and no ArtCraft name. Up to 0.22.0 it also added WebAssembly SIMD, which the release has itself from 0.23.0. The
 [README](README.md) says why.
 
 The whole update takes about an hour, most of it waiting for builds.
@@ -33,7 +34,9 @@ Look for changes to what the userscript relies on:
 - opening a **dropped file**;
 - saving through a **download**;
 - the **title** (a `*` marks unsaved changes);
-- the canvas element `#vectorcraft_canvas`.
+- the canvas element `#vectorcraft_canvas`;
+- the page's control channel, `window.vectorcraft`: its `request`, through which the userscript answers Save As
+  (`ui.dialog.set`, `ui.dialog.confirm`).
 
 Look also for changes to the parts `build/debrand.py` edits: the Help menu, the About box, the Discord button and
 the community links.
@@ -71,7 +74,7 @@ Every line must read PASS. The workflow runs the same check and fails if any lin
 |---|---|
 | The page's SHA-384 (integrity) matches the loader and the wasm | A changed file, a line ending included, stops the editor from loading |
 | Every file is under 100 MiB (WARN from 80) | GitHub refuses a larger file. The wasm ships gzipped for that (`compress-wasm.py`), and `check.py` checks it unpacked |
-| `simd128` is in the wasm's target features | The whole point of this build: about 2.3 times as fast |
+| `simd128` is in the wasm's target features | The canvas draws about 2.3 times as fast with it. The release sets it itself from 0.23.0, and a build without it stops here |
 | "ArtCraft" appears exactly once, in "Based on VectorCraft by the ArtCraft team" | The brand terms: a modified build carries no ArtCraft marks |
 | No ArtCraft links (getartcraft.com, discord.gg/artcraft) | The same |
 | The version string | That it is the release you meant |
@@ -87,8 +90,8 @@ cd path/to/app-vX.Y.Z && python3 -m http.server 8780
 ```
 
 - **The start page.** There is no Discord button in the bar, and under *Community* only *Source code on GitHub*.
-- **Help.** It lists *VectorCraft on GitHub*, *Search Commands…*, *VectorCraft Help…* and *About VectorCraft*, with
-  no ArtCraft entries.
+- **Help.** It lists *VectorCraft on GitHub*, *Search Commands…*, *VectorCraft Help…*, *Safe Mode…* (from 0.23.0),
+  *Check for Updates…* and *About VectorCraft*, with no ArtCraft entries.
 - **Help › About.** It shows the new version and the line *Based on VectorCraft by the ArtCraft team, built with
   WebAssembly SIMD …*
 
@@ -259,6 +262,36 @@ Built, tested and published on 2026-11-08. 0.21.0 and 0.21.1 were never hosted.
   carries. The userscript waits for the window title to be the file's name, so test that flow closely in the release
   that brings it.
 
+### Known: VectorCraft 0.23.0, published with the own patch carried over
+
+Built, tested and published on 2026-11-10.
+- **SIMD is the release's own.** 0.23.0's `.cargo/config.toml` sets `-C target-feature=+simd128` for the wasm target,
+  and its official web zip passes `check.py`'s SIMD line. `build.sh` now builds with the release's own flags and adds
+  the flag only to a tag without it (*The official release has SIMD*). This build's target features are the official
+  build's, one for one. A full render after a zoom step on 10214's Maskin takes 8.4 ms in this build, in the live
+  0.22.0 and in the official 0.23.0 alike.
+- **The own patch stopped on `select.rs`.** 0.23.0 gave the shape tools the Selection tool's rotate zone (`ROTATE_ZONE`
+  and `rotate_zone`, beside `box_hit`), so that hunk no longer fitted; the other three files applied with offsets.
+  The hunk was carried over by hand. `rotate_zone` got the same guard as `box_hit`, so a shape tool does not turn a
+  selection of such objects either, as before 0.23.0, when shape tools had no rotate zone. With the patch,
+  vectorcraft-doc passes 459 tests and vectorcraft-tools 894. A test of both guards, run on the clone and not kept in
+  the patch, passed. In the browser a marked object shows no handles and keeps its size, byte for byte as in 0.22.0.
+- **`debrand.py` stopped on the links of About and Home.** From 0.23.0 a link also takes a `centered` argument, for the
+  Home screen's centred column, so it now takes the line either way, still exactly once. The start page shows no
+  Discord button, only *Source code on GitHub*. Help gains *Safe Mode…*.
+- **Colours from an `.ai` move again**, by up to 29 in a channel: 0.23.0 changed its Generic CMYK conversion. Every
+  shape and text of the six test files opens as in 0.22.0, and this build opens them byte for byte as the official
+  0.23.0. The new colours sit nearer the house's own pictures. On 2349's Maskin, against the plant's `2349_Maskin.png`
+  (Illustrator's export), the mean largest-channel distance falls from 6.0 to 4.0, and 200,009 of the 207,616 changed
+  pixels came nearer.
+- **The userscript (1.115.3):** its syncs placed as many objects as on 0.22.0 (77, 107 and 77). The `.ai` flow gave the
+  same results, its synced picture differing by those colours alone. The first save was answered through the control
+  channel, which 0.23.0 builds from a shared library with the same methods. The IWMAC title stands 12 px after Help.
+- **The wasm** is 93.7 MiB, shipped as 34.1 MiB gzipped. The official one, 93.8 MiB raw, is just under GitHub's limit.
+- **Nothing to do:** the new progress window for a slow open shows on the desktop only, since the web opens files at
+  once; and an `.ai` with editing data no longer shows the Import PDF dialog, which the userscript never answered.
+- **Watch:** the upstream change that would name an opened file by its stem or by its title is still open.
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,
@@ -387,27 +420,24 @@ curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x8
 `build/build.sh` does the rest. It clones the tag and runs `debrand.py`. It fetches the official web zip for its
 licence files. When that zip has a `fonts/` folder, it fetches craft-fonts at the commit the release's workflow pins
 and builds with them, as the official web build did up to 0.12.0. From 0.13 the release builds its web version
-without them, and so does this. Then it builds with `-C target-feature=+simd128` for the wasm target only. The work
-folder needs about 5 GB.
+without them, and so does this. Then it builds with WebAssembly SIMD for the wasm target: from 0.23.0 by the
+release's own `.cargo/config.toml`, and for an earlier tag by `-C target-feature=+simd128`, which it adds then. The
+work folder needs about 5 GB.
 
 Run `build.sh` from a WSL path or from `/mnt/c/...`. The scripts are kept LF by `.gitattributes`.
 
-## When the official release gets SIMD
+## The official release has SIMD
 
-Check every new release's own web zip first:
+From 0.23.0 the official web release is built with WebAssembly SIMD: the release's `.cargo/config.toml` sets
+`-C target-feature=+simd128` for the wasm target, as this site did from 0.11.0. `check.py` on its zip says PASS on
+the SIMD line. `build.sh` then builds with the release's own flags. It sets the flag itself only for a tag whose
+config lacks it, because an environment variable of the same key could replace whatever else the release puts there.
+`check.py` still fails a build without SIMD, so a release that drops it stops the update.
 
-```bash
-python3 build/check.py path/to/unzipped/vectorcraft-web-X.Y.Z
-```
-
-If its SIMD line says PASS, the official build is as fast as this one. Then the site can host the official zip
-unmodified again, which is simpler: the ArtCraft marks are allowed in an official build, so `debrand.py` is no longer
-needed. To do that, bring back the workflow's earlier version, which downloaded the release's web zip and unpacked
-it into `app/`; it is in the history from before 2026-10-17. Then update the README's *How this build differs*
-section, and change `check.py`'s ArtCraft line to accept the official build.
-
-But the official wasm is as large as this one, so it would still have to ship gzipped, and `compress-wasm.py`
-changes the page. Read the brand terms again before dropping `debrand.py` for a build whose page is changed.
+This site still builds its own, and cannot host the official zip unmodified again:
+- its own patch (*This site's own changes*) needs the source;
+- the official wasm is as large as this one, so it still has to ship gzipped, and `compress-wasm.py` changes the page.
+  A page changed that way is a modified build, so `debrand.py` stays (the brand terms).
 
 ## Why these choices
 
@@ -423,6 +453,7 @@ changes the page. Read the brand terms again before dropping `debrand.py` for a 
   is handled: the page sees the wasm's own first bytes and skips the unpacking.
 - **Byte for byte.** `app/** -text` in `.gitattributes` keeps every file as built. The page names the loader and
   the wasm by SHA-384, and a line ending converted by Git on Windows would stop the editor.
-- **A build of our own, not the official zip.** The official web release lacks SIMD. Measured on 10214's Maskin,
-  a drag frame takes 11.5 ms in the official build and 5.0 ms in this one; at 1920 x 1080, 17.4 ms and 7.1 ms. The
-  pixels are the same.
+- **A build of our own, not the official zip.** It began for SIMD, which the official web release lacked up to 0.22.0:
+  measured on 10214's Maskin, a drag frame took 11.5 ms in the official build and 5.0 ms in this one; at 1920 x 1080,
+  17.4 ms and 7.1 ms, with the same pixels. From 0.23.0 the release has SIMD itself, and the build stays our own for
+  the site's patch and for the gzipped wasm (*The official release has SIMD*).

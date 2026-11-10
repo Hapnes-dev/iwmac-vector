@@ -8,25 +8,12 @@ userscript:
 - **Editor:** https://hapnes-dev.github.io/iwmac-vector/app/
 - **This page:** https://hapnes-dev.github.io/iwmac-vector/
 
-Currently: VectorCraft 0.22.0.
+Currently: VectorCraft 0.23.0.
 
 ## How this build differs from the official web build
 
-Four things differ from the official web release of the same version, and nothing else.
+Three things differ from the official web release of the same version, and nothing else.
 
-- **WebAssembly SIMD is on.** The official web release is built without it: its wasm's `target_features` lack
-  `simd128`, and the canvas renderer (vello_cpu) then runs its scalar fallback. This build adds
-  `-C target-feature=+simd128` for the wasm target only. The canvas then draws about 2.3 times as fast. These are
-  the render times VectorCraft 0.11.0 shows in its status bar while one object is dragged, in Chrome:
-
-  | Drawing | Window | Official | This build |
-  |---|---|---|---|
-  | 10214's Maskin (about 900 elements) | 1400 × 900 | 11.6 ms | 5.0 ms |
-  | the same | 1920 × 1080 | 16.8 ms | 7.0 ms |
-  | 10214's Oversikt | 1400 × 900 | 12.8 ms | 5.5 ms |
-
-  The pixels it draws are the same. At fit zoom they are identical, and at 186 % 0.04 % of them differ, by at
-  most 2/255.
 - **The ArtCraft name is taken out.** VectorCraft's code is MIT OR Apache-2.0, but the ArtCraft name, wordmark
   and mark are trademarks, and
   [docs/brand/LICENSE-brand.txt](https://github.com/storytold/vectorcraft/blob/main/docs/brand/LICENSE-brand.txt)
@@ -41,7 +28,7 @@ Four things differ from the official web release of the same version, and nothin
 - **IWMAC objects keep their size.** The userscript marks with `data-iwdie-fixed="1"` the objects its Designer draws
   as a picture of their own size: pumps, alarms, LEDs, valves, arrows, values' pills. A resize would only cut them
   off or stretch them there. Here such an object moves and does nothing else. A selection of only such objects has
-  no handles. A scale or rotation of a selection that holds one, by handle, tool or the Transform panel, moves it by
+  no handles and no rotate zone, for the Selection tool and the shape tools alike. A scale or rotation of a selection that holds one, by handle, tool or the Transform panel, moves it by
   its centre and leaves its size and turn. This is [`build/patches/vectorcraft--iwdie-fixed-size.patch`](build/patches/vectorcraft--iwdie-fixed-size.patch),
   which `build.sh` applies to the release's source. It serves this site alone (UPDATING.md, *This site's own
   changes*).
@@ -58,6 +45,11 @@ pins (UPDATING.md, *Fixes taken ahead of a release*). None is needed now. From 0
 reader's fix for a stroked polyline that reaches every corner of its bounding box, such as a heat exchanger's zigzag in
 an `.ai`, which had opened as that box. 0.22.0 has the fix itself.
 
+**WebAssembly SIMD** is no longer a difference. The official web release had none up to 0.22.0, and its canvas
+renderer (vello_cpu) ran a scalar fallback, so from 0.11.0 to 0.22.0 this build added `-C target-feature=+simd128` for
+the wasm target and drew about 2.3 times as fast. From 0.23.0 the release turns it on in its own `.cargo/config.toml`,
+and `build.sh` uses that; it adds the flag only to a tag without it. `check.py` still checks the wasm for it.
+
 Everything else is the official source at the release tag. The fonts are as in the official web build: craft-fonts
 at the commit the release pins whenever its web zip carries them (up to 0.12.0, and again from 0.14.0), and none in
 0.13. The licence files and notices come from the official web zip. The JavaScript the loader imports (`snippets/`)
@@ -69,7 +61,7 @@ and the app's icons (`icons/`), new in 0.20, are this build's own.
 |---|---|
 | `app/` | The editor: the page, its loader, the wasm (gzipped), the fallback fonts, and the official web zip's licence files and notices |
 | `UPDATING.md` | The runbook for moving to a new VectorCraft release: try, check, test the userscript, publish, roll back |
-| `build/build.sh` | Builds `app/` from a release tag: clones the tag, applies this site's own changes, runs `debrand.py`, applies the fixes in `build/patches/`, builds with SIMD (and craft-fonts where the official web build has them), adds the official zip's licence files |
+| `build/build.sh` | Builds `app/` from a release tag: clones the tag, applies this site's own changes, runs `debrand.py`, applies the fixes in `build/patches/`, builds with SIMD (the release's own from 0.23.0, and craft-fonts where the official web build has them), adds the official zip's licence files |
 | `build/patches/` | One patch per file: fixes taken ahead of a release, each to one vendored crate of craft-libs, and this site's own changes to VectorCraft (`vectorcraft--…`) |
 | `build/debrand.py` | Takes the ArtCraft name out of a checkout. Every edit must match exactly once, so a release that moved the code stops the build instead of leaving the name in |
 | `build/check.py` | Checks a build folder or the live site: integrity, SIMD, the ArtCraft name only in the attribution, the version, every file under GitHub's 100 MiB |

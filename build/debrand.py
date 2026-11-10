@@ -1,9 +1,9 @@
 """Take the ArtCraft name out of a VectorCraft source checkout before it is built for this site.
 
 VectorCraft's code is MIT OR Apache-2.0, but the ArtCraft name, wordmark and mark are trademarks under
-docs/brand/LICENSE-brand.txt: a modified version that is published must not carry them. Building with
-WebAssembly SIMD makes this site's copy such a version. So the parts of the app that use the ArtCraft name
-are taken out:
+docs/brand/LICENSE-brand.txt: a modified version that is published must not carry them. This site's copy is
+such a version: it carries its own patch and a page that unpacks a gzipped wasm (and up to 0.22.0 it added
+WebAssembly SIMD). So the parts of the app that use the ArtCraft name are taken out:
 
 - the Discord button (app bar, About, Home) and the Help menu's Discord, ArtCraft website and
   getartcraft.com entries, with their commands; the link to VectorCraft's source on GitHub stays;
@@ -39,12 +39,15 @@ def edit(rel, pairs):
 # the app bar never shows the Discord button
 edit("crates/ui-egui/src/chrome.rs", [("let discord = search && ", "let discord = false && search && ")])
 
-# the button's tooltip, and About / Home: the GitHub link only
+# the button's tooltip, and About / Home: the GitHub link only. From 0.23 a link also takes `centered` (the Home
+# screen's centred column), so a link's line ends one of two ways; each line must still match exactly once
+community = (root / "crates/ui-egui/src/community.rs").read_text(encoding="utf-8")
+end = ", centered);\n" if 'help.website", &s("website"), centered);\n' in community else ");\n"
 edit("crates/ui-egui/src/community.rs", [
     ('tl!("Join the ArtCraft community on Discord (discord.gg/artcraft)")', 'tl!("Discord")'),
     ("    discord_button(app, ui, true);\n    ui.add_space(8.0);\n", ""),
-    ('    link(app, ui, "globe", tl!("ArtCraft website"), "help.website", &s("website"));\n', ""),
-    ('    link(app, ui, "external-link", tl!("VectorCraft on getartcraft.com"), "help.appPage", &s("appPage"));\n', ""),
+    ('    link(app, ui, "globe", tl!("ArtCraft website"), "help.website", &s("website")' + end, ""),
+    ('    link(app, ui, "external-link", tl!("VectorCraft on getartcraft.com"), "help.appPage", &s("appPage")' + end, ""),
 ])
 
 # the commands behind them

@@ -1,6 +1,7 @@
 #!/bin/bash
-# Build this site's copy of VectorCraft from a release tag: the official source, with WebAssembly SIMD turned on
-# for the wasm target and the ArtCraft name taken out (debrand.py), packaged like the official web zip into ../app.
+# Build this site's copy of VectorCraft from a release tag: the official source, with WebAssembly SIMD for the wasm
+# target (the release's own from 0.23.0), the site's own patches and the ArtCraft name taken out (debrand.py),
+# packaged like the official web zip into ../app.
 #
 #   build/build.sh v0.12.0 [work-dir]
 #
@@ -97,7 +98,14 @@ else
 fi
 
 cd "$SRC/apps/vectorcraft-web"
-export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-C target-feature=+simd128"
+# WebAssembly SIMD for the wasm target. From 0.23.0 the release turns it on in its own .cargo/config.toml, and its
+# flags are then used as they are: an environment variable of the same key could replace them. An earlier tag gets it here
+if grep -qs 'target-feature=+simd128' "$SRC/.cargo/config.toml"; then
+  echo "SIMD: the release's own .cargo/config.toml turns it on"
+else
+  export CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-C target-feature=+simd128"
+  echo "SIMD: turned on here, as the release does not"
+fi
 export CARGO_TARGET_DIR="$WORK/target-site"
 rm -rf "$WORK/dist-site"
 trunk build --release --dist "$WORK/dist-site"
