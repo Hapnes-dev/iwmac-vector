@@ -291,8 +291,10 @@ Built, tested and published on 2026-11-10.
   keeps, with the panel's objects on top. The card ended on *✓ Ready to sync*, and no Save As stayed on screen. One
   object moved and synced (*✓ Synced · 1 changed*, 1 of 59 objects moved), then synced back, and the panel loaded
   again unchanged. The synced picture came out 1280 × 1024 instead of the 1400 × 750 of the picture it came from.
-  2349's Designer canvas is 1280 × 1024, and userscript 1.115.3 laid the kept drawing out at the canvas's size. That
-  is the userscript's own layout, which 1.115.4 changes, not VectorCraft's.
+  2349's Designer canvas is 1280 × 1024, and userscript 1.115.3 fitted the kept drawing into it, scaled down. That was
+  the userscript's own layout, not VectorCraft's. Run again with userscript 1.116.0, the drawing stayed at its own
+  size. The picture is still the canvas's 1280 × 1024, the part the Designer shows (it clips a wider picture at its
+  canvas), and there it matches the saved one.
 - **The wasm** is 93.7 MiB, shipped as 34.1 MiB gzipped. The official one, 93.8 MiB raw, is just under GitHub's limit.
 - **Nothing to do:** the new progress window for a slow open shows on the desktop only, since the web opens files at
   once; and an `.ai` with editing data no longer shows the Import PDF dialog, which the userscript never answered.
