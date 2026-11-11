@@ -314,6 +314,12 @@ Built, tested and published on 2026-11-11.
 - **The userscript (1.119.0):** its syncs placed as many objects as on 0.23.0. The `.ai` flow gave the same results and
   the same synced picture to the pixel. The first save was answered through the control channel. The IWMAC title
   stands 12 px after Help.
+- **In the live Designer** (step 5, the same day, userscript 1.119.0): 2349's Maskin opened from the drawing its picture
+  keeps, on a 1400 × 750 artboard, the panel's own size. The card ended on *✓ Ready to sync*, and no Save As stayed on
+  screen. One object moved and synced (*✓ Synced · 1 changed*), then synced back, and the panel loaded again
+  unchanged. The synced picture matched the saved one (mean difference 0.12). Moved and moved back, that object came
+  back 1 px right of where it was. That is the userscript's own rounding: both builds save the drawing byte for byte
+  the same, before the move and after it.
 - **Speed:** a full render after a zoom step on 10214's Maskin takes 8.4 ms here, in 0.23.0 and in the official 0.24.0.
 - **The wasm** is 96.7 MiB, shipped as 35.2 MiB gzipped. The official raw wasm is 96.8 MiB, 3.2 MiB under GitHub's
   limit, and it grows with every release: this release adds seven built-in symbol, brush and style libraries.
