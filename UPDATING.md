@@ -300,6 +300,25 @@ Built, tested and published on 2026-11-10.
   once; and an `.ai` with editing data no longer shows the Import PDF dialog, which the userscript never answered.
 - **Watch:** the upstream change that would name an opened file by its stem or by its title is still open.
 
+### Known: VectorCraft 0.24.0, published as it came
+
+Built, tested and published on 2026-11-11.
+- **Nothing to carry over.** The own patch applied with small offsets, and `debrand.py` ran unchanged: the same six
+  lines left for a look, and 155 translation lines taken out. With the patch, vectorcraft-doc passes 474 tests and
+  vectorcraft-tools 920. A test of both guards, run on the clone, passed. In the browser a marked object shows no
+  handles and keeps its size, byte for byte as in 0.23.0.
+- **`.ai` files.** This build opens the six test files byte for byte as the official 0.24.0, and five of them byte for
+  byte as 0.23.0. The sixth is 2313's VGV: three clips that cut nothing are gone, and the 40 % opacity they sat in now
+  rests on their lines. Rendered, no pixel differs from 0.23.0's by more than 8, and the lines match the house's own
+  picture as before.
+- **The userscript (1.119.0):** its syncs placed as many objects as on 0.23.0. The `.ai` flow gave the same results and
+  the same synced picture to the pixel. The first save was answered through the control channel. The IWMAC title
+  stands 12 px after Help.
+- **Speed:** a full render after a zoom step on 10214's Maskin takes 8.4 ms here, in 0.23.0 and in the official 0.24.0.
+- **The wasm** is 96.7 MiB, shipped as 35.2 MiB gzipped. The official raw wasm is 96.8 MiB, 3.2 MiB under GitHub's
+  limit, and it grows with every release: this release adds seven built-in symbol, brush and style libraries.
+- **Watch:** the upstream change that would name an opened file by its stem or by its title is still open.
+
 ## 6. Publish
 
 Actions › *Update VectorCraft* › *Run workflow*, with the tag and **commit** ticked. The workflow builds again,

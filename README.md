@@ -8,7 +8,7 @@ userscript:
 - **Editor:** https://hapnes-dev.github.io/iwmac-vector/app/
 - **This page:** https://hapnes-dev.github.io/iwmac-vector/
 
-Currently: VectorCraft 0.23.0.
+Currently: VectorCraft 0.24.0.
 
 ## How this build differs from the official web build
 
