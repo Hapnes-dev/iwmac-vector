@@ -321,6 +321,10 @@ Built, tested and published on 2026-11-11.
   back 1 px right of where it was. That is on the userscript's side: both builds save the drawing byte for byte the
   same, before the move and after it. Userscript 1.119.1 puts a placeholder that is back within a pixel of where it was
   sent exactly there.
+- **Again with userscript 1.119.1** (2026-11-12, 2349's Maskin): this time the placeholder opened exactly where it was
+  sent, and moved and moved back it came back exactly. Set 0.62 px off by hand, as the first check found it, it synced
+  with the object unmoved, and moved and moved back it came back exactly too, where 1.119.0 had put it 1 px right. Why
+  it opened 0.62 px off in the first check is still unknown: 1.119.1 changed only the sync.
 - **Speed:** a full render after a zoom step on 10214's Maskin takes 8.4 ms here, in 0.23.0 and in the official 0.24.0.
 - **The wasm** is 96.7 MiB, shipped as 35.2 MiB gzipped. The official raw wasm is 96.8 MiB, 3.2 MiB under GitHub's
   limit, and it grows with every release: this release adds seven built-in symbol, brush and style libraries.
